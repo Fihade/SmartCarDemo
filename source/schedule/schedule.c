@@ -9,7 +9,10 @@
 /******************************************************************************/
 /******************************D E F I N I T I O N ****************************/
 //=============================== 数据采集 ================================//
-int          g_Line;                                                    //摄像头行数
+int          g_Line;
+int          g_LowLine;
+int          g_HighLine;
+//摄像头行数
 int          g_ImageLine;                                               //图像数据行数
 Video_state  g_VideoFlag = VIDEO_WAIT;                                  //处理图像状态标志
 int          g_Display;                                                 //场数 系统计时
@@ -46,7 +49,7 @@ int     g_pulse;                                                       //闭环PID
 int     g_speed_feedback;
 int     g_PwmMotor;
 //==============================数据传输===============================//
-INT8U   g_SendPic = 1;                                                 //如果要用串口上位机看图像，则把该变量置一，建议看图像时把舵机和电机关闭！！！！！！！！！！！！！
+INT8U   g_SendPic = 0;                                                 //如果要用串口上位机看图像，则把该变量置一，建议看图像时把舵机和电机关闭！！！！！！！！！！！！！
 INT16U  g_SendIndex;
      
 
@@ -109,9 +112,9 @@ void Running_Init(void)
     g_speed_d = 1;
   
     turn_p = 7.5;                      //舵机pid p      11     8     10      9        9          8.5          8.6
-    turn_d = 0.5;                    //舵机pid d        1      1    1.2     1.2         1        1           1
+    turn_d = 0.4;                    //舵机pid d        1      1    1.2     1.2         1        1           1
     
-    g_speed_final = 35;          //电机速度赋值
+    g_speed_final = 30;          //电机速度赋值
 }
 
 /******************************************************************************/
@@ -357,13 +360,25 @@ void Search(void)
         //加权平均法求方向控制
         g_DirectionControlWhole = 0;
         g_DirectionControlLine = 0;
-        for (i = 0; i < MIN(55,g_CenterNum); i ++)
+        int tmpx;
+        g_LowLine = 10;
+        g_HighLine = 20;
+        for (i = 0; i < g_CenterNum; i ++)
         {
             if (g_CenterPosition[i].y >= 0 && g_CenterPosition[i].y <= MAX_VIDEO_POINT)
             {
-                g_DirectionControlLine += (int)g_CenterPosition[i].x;
-                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //注意数据不要溢出    
-            }
+//                g_DirectionControlLine += (int)g_CenterPosition[i].x;
+//                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //注意数据不要溢出  
+              if(g_CenterPosition[i].x < g_LowLine)
+                tmpx =((int) g_CenterPosition[i].x)*2;
+              else if(g_CenterPosition[i].x > g_HighLine)
+                tmpx = ((int)g_CenterPosition[i].x)*1;
+              else 
+                tmpx = ((int)g_CenterPosition[i].x)*6;
+               
+              g_DirectionControlLine +=tmpx;
+              g_DirectionControlWhole += (int)g_CenterPosition[i].y *tmpx;
+           }
         }
         
         
