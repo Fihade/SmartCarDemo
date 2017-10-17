@@ -43,7 +43,7 @@ typedef enum        //图像采集状态机的状态变量的状态值，为枚举形
     VIDEO_FINISH,
 }Video_state;
 
-typedef struct      //图像数据结构  
+typedef struct      //图像数据结构  以左下角为坐标原点 向上为x，向右为y
 {
     int16 x;
     int16 y;
@@ -51,8 +51,7 @@ typedef struct      //图像数据结构
 
 /*********图像处理********/
 #define   MAX_POINT_NUM                 80                  //边沿和中心最大个数
-#define   IMAGE_MIDDLE                  185  
-//图像阈值，根据自己的图像适当调整
+#define   IMAGE_MIDDLE                  185                 //图像阈值，根据自己的图像适当调整
 #define   WIDTH                         60                  //第一行白块宽度要求 根据前瞻以及看到的图像情况适当调整
 #define   INIT_DATA			250                 //无效数据
 

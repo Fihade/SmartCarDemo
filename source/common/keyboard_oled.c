@@ -70,14 +70,14 @@ void Choise(void)
     choise = (ZLG7290GetKeyAndDisplay());
     Delay_T3_mS(10);
     
-    if(choise == 0x00)         //开始发车
+    if(choise == 0x00)         //开始
     {
       OLED_RAM_Fill_add(0);  
       OLED_RAM_Refresh_add();
       Delay_T3_mS(50);
       break;
     }
-    else if(choise == 1)       
+    else if(choise == 1)       //速度
     {
       Set_Mid();
     }

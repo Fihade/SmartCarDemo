@@ -1,38 +1,38 @@
-"C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\drivers\i2c.c"
+"C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\drivers\i2c.c"
 -std=c99
 -ferror-limit=100
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\common
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\common
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\cpu
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\cpu
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\drivers
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\drivers
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\schedule
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\schedule
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\pid
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\pid
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\link\Pflash.icf
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\link\Pflash.icf
 -I
-E:\arm\inc
+C:\smartcarSoftware\IAR\arm\inc
 -I
-E:\arm\inc\c
+C:\smartcarSoftware\IAR\arm\inc\c
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\common
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\common
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\cpu
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\cpu
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\drivers
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\drivers
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\schedule
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\schedule
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\pid
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\pid
 -I
-C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\link\Pflash.icf
+C:\Users\zhangle\Desktop\十一届校内赛\四轮摄像头\2017校内赛摄像头四轮例程\source\link\Pflash.icf
 -D__CHAR_BITS__=8
 -D__CHAR_MAX__=0xff
 -D__CHAR_MIN__=0
@@ -225,8 +225,8 @@ C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\link\Pflas
 -D__HAS_LOCATED_DECLARATION__=1
 -D__HAS_LOCATED_WITH_INIT__=1
 -D__IAR_COMPILERBASE__=593924
--D__DATE__="Oct 17 2017"
--D__TIME__="16:20:09"
+-D__DATE__="Oct  7 2017"
+-D__TIME__="16:32:46"
 -D__STDC__=1
 -D__STDC_VERSION__=199901L
 -D__STDC_HOSTED__=1
@@ -251,8 +251,8 @@ C:\Users\swaggymiller\Desktop\程序\2017校内赛摄像头四轮例程_V1\source\link\Pflas
 -D__EDG_SYSV=0
 -D__EDG_ANSIC=1
 -D__EDG_CPP0X_IL_EXTENSIONS_SUPPORTED=1
--D_DLIB_CONFIG_FILE_HEADER_NAME="E:\arm\INC\c\DLib_Config_Normal.h"
--D_DLIB_CONFIG_FILE_STRING="E:\\arm\\INC\\c\\DLib_Config_Normal.h"
+-D_DLIB_CONFIG_FILE_HEADER_NAME="C:\smartcarSoftware\IAR\arm\INC\c\DLib_Config_Normal.h"
+-D_DLIB_CONFIG_FILE_STRING="C:\\smartcarSoftware\\IAR\\arm\\INC\\c\\DLib_Config_Normal.h"
 -D__VERSION__="IAR ANSI C/C++ Compiler V7.20.2.7424/W32 for ARM"
 -D_VA_DEFINED=
 -D__CODE_MEMORY_LIST1__()=__CODE_MEM_HELPER1__(__code, 0 )

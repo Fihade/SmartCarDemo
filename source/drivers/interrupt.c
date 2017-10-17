@@ -39,7 +39,7 @@ void interrupt_init(void)
     //set_irq_priority(INTERRUPT_DMA_CH0_IRQ,4);//3
     set_irq_priority(INTERRUPT_VSYNC_IRQ, 3); // higher //3
     set_irq_priority(INTERRUPT_HREF_IRQ, 4);//4
-    set_irq_priority(INTERRUPT_PIT_4000uS_IRQ, 5);
+    set_irq_priority(INTERRUPT_PIT_4000uS_IRQ, 2);
 //    set_irq_priority(INTERRUPT_UART_IRQ,5);
     
     __set_BASEPRI(0x60); // priority 6-0 are allowed.

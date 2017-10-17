@@ -9,20 +9,17 @@
 /******************************************************************************/
 /******************************D E F I N I T I O N ****************************/
 //=============================== 数据采集 ================================//
-int          g_Line;
-int          g_LowLine;
-int          g_HighLine;
-//摄像头行数
+int          g_Line;                                                    //摄像头行数
 int          g_ImageLine;                                               //图像数据行数
 Video_state  g_VideoFlag = VIDEO_WAIT;                                  //处理图像状态标志
 int          g_Display;                                                 //场数 系统计时
 uint8        *p = NULL;                                                 //图像采集用指针
 int          g_LineToDiv;                                               //隔行采集用除数
 int          img_Cnt;
-//=============================== 图像数据 ================================//
+//============================== 图像数据 ================================//
 Int16_point  g_CenterPosition[MAX_POINT_NUM];                           //中心线
 Int16_point  g_LeftEdge[MAX_POINT_NUM], g_RightEdge[MAX_POINT_NUM];     //左右边沿
-uint8 	     video_ori[MAX_VIDEO_LINE][MAX_VIDEO_POINT] = {0};
+uint8 	video_ori[MAX_VIDEO_LINE][MAX_VIDEO_POINT] = {0};
 int          g_CenterNum;                                               //中心点个数
 int          g_LeftEdgeNum, g_RightEdgeNum;                             //左右边沿点个数
 INT32U Temp = 0;                                                        //采集用缓冲变量
@@ -42,103 +39,85 @@ int     g_DirectionError;
 int     last_g_DirectionError;
 int     g_PwmServo;
 int     g_speed_final;
-float     turn_p = 0.0;
-float     turn_d = 0.0;
+int     turn_p = 0.0;
+int     turn_d = 0.0;
 //电机控制变量
 int     g_pulse;                                                       //闭环PID控制的反馈值
 int     g_speed_feedback;
 int     g_PwmMotor;
 //==============================数据传输===============================//
-INT8U   g_SendPic = 0;                                                 //如果要用串口上位机看图像，则把该变量置一，建议看图像时把舵机和电机关闭！！！！！！！！！！！！！
+INT8U   g_SendPic = 1;                                                 //如果要用串口上位机看图像，则把该变量置一，建议看图像时把舵机和电机关闭
 INT16U  g_SendIndex;
      
 
 
 
-/*****************************************************************************/
+/******************************************************************************/
 /******************************F U N C T I O N S  *****************************/
 /******************************************************************************/
 /*
 * Schedule中变量初始化
 */
-void ScheduleInit(void)
+void ScheduleInit(void)//变量初始化
 {
     Running_Init();               //运行参数初始化
     PID_Init();                   //PID初始化
                   
-    //Choise();                   //键盘函数，暂时不用
+    //Choise();
     
     g_Line = 0;
     
     TIME2_interrupt_DIS(); 	 //电机中断服务程序关闭,PIT2  
     TIME2_RESET();
     
-    ENABLE_INTERRUPT_HREF();
-    ENABLE_INTERRUPT_VSYNC();
+    ENABLE_INTERRUPT_HREF();//开启行中断
+    ENABLE_INTERRUPT_VSYNC();//开启场中断
 }
-/*
-function name:  running_init
-description:    init
-*/
-void Running_Init(void)
-{   
-    //拨码开关
 
-    if(JM_0_STATUS())//拨码1 上-ON
-    {
+void Running_Init(void)//初始化
+{
+    if(JM_0_STATUS())//拨码开关
       LED_A_ON();
-      
-    }
     
-    if(JM_1_STATUS())//拨码2上-ON
-    {
+    if(JM_1_STATUS())//拨码开关
       LED_B_ON(); 
-    }
     
-    if(JM_2_STATUS())//拨码3上-ON
-    {
+    if(JM_2_STATUS())//拨码开关
       LED_C_ON();   
-    }
     
-    if(JM_3_STATUS()) //拨码4上-ON
-    {
-     //
-      LED_D_ON();  
-     }
-          
+    if(JM_3_STATUS())//拨码开关
+      LED_D_ON();
   
-    g_speed_p = 150;                  //电机pid 
-    g_speed_i = 70;
-    g_speed_d = 1;
+    g_speed_p = 150;//电机PID，P
+    g_speed_i = 90;//电机PID，I
+    g_speed_d = 0;//电机PID，D
   
-    turn_p = 7.5;                      //舵机pid p      11     8     10      9        9          8.5          8.6
-    turn_d = 0.4;                    //舵机pid d        1      1    1.2     1.2         1        1           1
+    turn_p = 10;//舵机PID。P
+    turn_d = 2;//舵机PID。D
     
-    g_speed_final = 30;          //电机速度赋值
+    g_speed_final = 30;//电机速度赋值
 }
 
-/******************************************************************************/
 /*
  * 后台处理函数
  */
-void Running(void)
+void Running(void)//主运行函数
 {
     //============================采集及搜索中心==============================//  
     Search();
 
 }
 
-
 /*
- * vsync_isr场中断服务函数，
+ * vsync_isr场中断服务函数
  */
-void vsync_isr(void)
+void vsync_isr(void)//场中断函数
 {
     CLR_FLAG_VSYNC();  	        //清除场中断标志，开启行中断
     										
     g_Line = 0;
      
-    ENABLE_INTERRUPT_HREF();   //开启行中断，行中断集满60行之后换场
+    ENABLE_INTERRUPT_HREF();   //开启行中断
 
     // 场序监控
     if(img_Cnt %5 ==0)
@@ -148,17 +127,14 @@ void vsync_isr(void)
     img_Cnt++;
 }
 
-/*
- * href_isr行中断服务函数
- */
-void href_isr(void)
+void href_isr(void)//行中断函数
 {
     CLR_FLAG_HREF();	
 
-    //=================================分行采集===============================// 
+    //=================================分行采集===============================//
     g_Line++;
         
-    if (VIDEO_WAIT == g_VideoFlag)
+    if (VIDEO_WAIT == g_VideoFlag)//等待状态
     {
         if (g_Line >= START_VIDEO_LINE)
         {
@@ -168,14 +144,16 @@ void href_isr(void)
         }
     }
     //数据采集状态
-    else if (VIDEO_ACQUISITION == g_VideoFlag)
+    else if (VIDEO_ACQUISITION == g_VideoFlag)//请求状态
     {
         if (g_ImageLine >= 20 && g_LineToDiv == 3)   //分行采集方式，即上面20行是隔1行采一行 下面40行是隔2行采一行
             g_LineToDiv = 2;
         if(g_Line % g_LineToDiv == 0)
         {          
             int i;
-            Delay_T3_uS(1);
+		
+            Delay_T3_uS(9);//整体图像右移（加大） 左移（减小）
+		
             p = video_ori[g_ImageLine];
             
             for(i = 0; i < MAX_VIDEO_POINT; i++)   //覆盖式图像采集
@@ -184,6 +162,11 @@ void href_isr(void)
                 p[i] = (uint8)Temp;
                 for (int m = 0; m < 3; m ++);
                  asm("nop");asm("nop");asm("nop");
+		      asm("nop");asm("nop");
+			asm("nop");asm("nop");asm("nop");
+		      asm("nop");asm("nop");
+			asm("nop");asm("nop");asm("nop");
+		      asm("nop");asm("nop");//加大图像每一行点与点之间的间隔  增多使图像放大
                 //这里也可以写作“g_VideoImageData[g_VideoImageLine][i]=(VIDEO_PORT);”大家自己看看这两种写法的区别
             }
                    
@@ -195,12 +178,12 @@ void href_isr(void)
         }
     }
     //图像处理和控制状态
-    else if (VIDEO_SEARCH == g_VideoFlag)       //采集结束 开始对图像进行处理
+    else if (VIDEO_SEARCH == g_VideoFlag)   //采集结束 开始对图像进行处理
     {
         ;
     }
     //同步状态
-    else if (VIDEO_FINISH == g_VideoFlag)       //处理结束 等待同步下一场图像
+    else if (VIDEO_FINISH == g_VideoFlag)   //处理结束 等待同步下一场图像
     {
             DISABLE_INTERRUPT_HREF();					//禁用行中断
             ENABLE_INTERRUPT_VSYNC();					//场中断使能
@@ -213,7 +196,7 @@ void href_isr(void)
 }
 
 
-void Search(void)
+void Search(void)//图像采集与处理，以及计算控制中心
 {
     int i, line, white_width = 0;
     //=======================图像识别=========================//
@@ -227,31 +210,35 @@ void Search(void)
         {
             //首先 求出本行所有白块的位置
             g_SEnum = 0;  //本行的白块计数器清零
-            if (video_ori[line][MAX_VIDEO_POINT-1] > IMAGE_MIDDLE)  //大于阈值为白 小于阈值为黑
+            if (video_ori[line][MAX_VIDEO_POINT-1] > IMAGE_MIDDLE)  //大于阈值为白 小于阈值为黑 左边坐标原点
                 g_Start[g_SEnum] = 0;
-            for (i = MAX_VIDEO_POINT-1; i > 0; i --)
+		
+            for (i = MAX_VIDEO_POINT-1; i > 0; i --)//直接扫165个点，从第164（左）点开 第0（右）个数据点始扫到
             {
-                if (video_ori[line][i] > IMAGE_MIDDLE && video_ori[line][i-1] <= IMAGE_MIDDLE)
-                {
-                    g_End[g_SEnum] = MAX_VIDEO_POINT-i;
-                    g_SEnum ++;
-                }
-                else if (video_ori[line][i] <= IMAGE_MIDDLE && video_ori[line][i-1] > IMAGE_MIDDLE)
-                {
-                    g_Start[g_SEnum] = MAX_VIDEO_POINT-i-1;
-                }
-                else if (g_SEnum >= 10)
-                {
-                    break;
-                }
+		  if (g_SEnum >= 10)//十个白块 退出
+		  {
+		    break;
+		  }
+		  else if (video_ori[line][i] > IMAGE_MIDDLE && video_ori[line][i-1] <= IMAGE_MIDDLE)//白块的终点
+		  {
+		    g_End[g_SEnum] = MAX_VIDEO_POINT-i;
+		    g_SEnum ++;
+		  }
+		  else if (video_ori[line][i] <= IMAGE_MIDDLE && video_ori[line][i-1] > IMAGE_MIDDLE)//白块的起点
+		  {
+		    g_Start[g_SEnum] = MAX_VIDEO_POINT-i-1;
+		  }   
+		  
             }
-            if (video_ori[line][0] > IMAGE_MIDDLE && g_SEnum < 10)
+            if (video_ori[line][0] > IMAGE_MIDDLE && g_SEnum < 10)//当最后一个点（右边）是白块时，为终点
             {
                 g_End[g_SEnum] = MAX_VIDEO_POINT-1;
                 g_SEnum ++;
             }
             //把最下面的那一行单独拿出来处理 做为后续处理的基础
-            if (g_SearchFlag)                     //最下一行处理标志
+		
+		//在大FOR循环里面，先找到白块宽度大于60的那一行。
+            if (g_SearchFlag)                    //最下一行处理标志  
             {
                 int temp_mark = 0;
                 if (g_SEnum == 0)
@@ -259,7 +246,8 @@ void Search(void)
                   continue;
                 }
                 white_width = g_End[0] - g_Start[0];
-                for (i = 1; i < g_SEnum; i ++)   //直接求最宽的白块
+		    
+                for (i = 1; i < g_SEnum; i ++)  //直接求最宽的白块
                 {
                     if (g_End[i] - g_Start[i] >= white_width)
                     {
@@ -279,10 +267,11 @@ void Search(void)
             }
             else
             {
-                if (g_SEnum == 0)
+                if (g_SEnum == 0)//当这行没有白块，直接跳出大FOR循环
                 {
                     break;
                 }
+		    //寻找这一行与上一行连通的白块
                 for (i = 0,g_CoverNum = 0; i < g_SEnum; i ++)
                 {
                     //覆盖关系，因为图像是一个联通区域 于是找与上一行已经找到白块相联通的白块
@@ -293,6 +282,8 @@ void Search(void)
                         g_CoverNum ++;
                     }
                 }
+		    
+		    //找到连通白块后，开始进行寻找最连通的白块
                 if (g_CoverNum == 1) //如果只有一个联通的 直接取出这个联通白块
                 {
                     g_LeftEdge[g_LeftEdgeNum].x = line;
@@ -312,6 +303,7 @@ void Search(void)
                     temp_center = (g_Start[g_CoverIndex[0]] + g_End[g_CoverIndex[0]]) / 2;
                     last_center = (g_LeftEdge[g_LeftEdgeNum-1].y + g_RightEdge[g_RightEdgeNum-1].y) / 2;
                     temp_dis = ABS(last_center - temp_center);
+			  
                     for (i = 1; i < g_CoverNum; i ++)
                     {
                         temp_center = (g_Start[g_CoverIndex[i]] + g_End[g_CoverIndex[i]]) / 2;
@@ -321,23 +313,18 @@ void Search(void)
                             temp_mark = i;
                         }
                     }
+			  //找到那个最接近的白块，然后把左右边缘赋值
                     g_LeftEdge[g_LeftEdgeNum].x = line;
-                    g_LeftEdge[g_LeftEdgeNum++].y = g_Start[temp_mark];
+                    g_LeftEdge[g_LeftEdgeNum++].y = g_Start[g_CoverIndex[temp_mark]];
                     g_RightEdge[g_RightEdgeNum].x = line;
-                    g_RightEdge[g_RightEdgeNum++].y = g_End[temp_mark];
+                    g_RightEdge[g_RightEdgeNum++].y = g_End[g_CoverIndex[temp_mark]];
                 }
             }
         }
         //=======================起点判断========================//
         
         //=======================十字处理========================//
-//        for(int i = 0 ; i<MAX_VIDEO_LINE - 1 ; i++){
-//            Width = g_RightEdge[0].y - g_LeftEdge[0].x;
-//            width = g_RightEdge[i].y - g_LeftEdge[i].x;
-//            if(width > Width){
-//               
-//            }
-//        }
+        
         //=======================中心求取========================//
         /*
         *
@@ -352,36 +339,19 @@ void Search(void)
             g_CenterPosition[i].x = g_RightEdge[i].x;
             g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;         
         }
-        
-        
-
     
         //===================转角以及电机控制====================//
         //加权平均法求方向控制
         g_DirectionControlWhole = 0;
         g_DirectionControlLine = 0;
-        int tmpx;
-        g_LowLine = 10;
-        g_HighLine = 20;
         for (i = 0; i < g_CenterNum; i ++)
         {
             if (g_CenterPosition[i].y >= 0 && g_CenterPosition[i].y <= MAX_VIDEO_POINT)
             {
-//                g_DirectionControlLine += (int)g_CenterPosition[i].x;
-//                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //注意数据不要溢出  
-              if(g_CenterPosition[i].x < g_LowLine)
-                tmpx =((int) g_CenterPosition[i].x)*2;
-              else if(g_CenterPosition[i].x > g_HighLine)
-                tmpx = ((int)g_CenterPosition[i].x)*1;
-              else 
-                tmpx = ((int)g_CenterPosition[i].x)*6;
-               
-              g_DirectionControlLine +=tmpx;
-              g_DirectionControlWhole += (int)g_CenterPosition[i].y *tmpx;
-           }
+                g_DirectionControlLine += (int)g_CenterPosition[i].x;
+                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //注意数据不要溢出    
+            }
         }
-        
-        
         if (g_DirectionControlLine > 0)
         {
             g_DirectionControl = g_DirectionControlWhole / g_DirectionControlLine;
@@ -399,8 +369,6 @@ void Search(void)
         {
             g_DirectionControl = g_FormerDirectionControl;
         }
-        
-        g_FormerDirectionControl = g_DirectionControl;
         //======================舵机控制===========================//
         
         Car_Turn();
@@ -484,15 +452,13 @@ void Search(void)
         }
 }
 
-
-
 //计时时间
 int32 g_time = 0;
 /******************************************************************************/
 /*
  *4ms控制中断
  */
-void pit_4000uS_isr(void)
+void pit_4000uS_isr(void)//4ms中断，用于控制电机，是个中断函数
 {
     //clear the interrupt flag to avoid re-entrance
     CLR_FLAG_PIT4000uS();
@@ -508,60 +474,47 @@ void pit_4000uS_isr(void)
     
 }
 
+void Car_Run(void)//电机控制函数，以及速度的赋值。
+{
 
-/*
-function name:  car_run
-parameters:     none
-author:         
-date:           2017-9-10
-description:    control car run forward
-*/
-void Car_Run(void)
-{   
-  
-    motorPID.vi_Ref = -g_speed_final;
-    g_PwmMotor = v_PIDCalc(&motorPID);
-     
-    if(g_PwmMotor > 1000)
+    motorPID.vi_Ref = g_speed_final;//将之前赋过值的变量给电机PID算法的参考值
+    g_PwmMotor = v_PIDCalc(&motorPID);//根据电机PID算法，算出要输出的PWM值。
+    
+    if(g_PwmMotor > 1000)//保护
     {
         g_PwmMotor = 1000;
     }
-    else if(g_PwmMotor < -1000)
+    else if(g_PwmMotor < -1000)//保护
     {
         g_PwmMotor = -1000;
     }
 
-    //g_PwmMotor= -300;           //开环测试电机用
-    SET_PWM_MOTR(g_PwmMotor);
+   g_PwmMotor=200;
+    SET_PWM_MOTR(g_PwmMotor);//最终输出给电机的PWM。
 
 }
 
-
-/*
-function name:  car_turn
-parameters:     none
-author:         
-date:           2017-9-10
-description:    control car turn
-*/
-void Car_Turn(void)
+void Car_Turn(void)//舵机，转向控制函数
 {
     //中值转换为偏离量，方便计算舵机转向
-    g_DirectionError = (MID_VIDEO_POINT - g_DirectionControl);
-    //测舵机中值时从这里到非门注释，测完后解注
+    g_DirectionError = (MID_VIDEO_POINT - g_DirectionControl);//MID_VIDEO_POINT是摄像头的中心变量，也就是车的位置变量。
+                                                              //g_DirectionControl根据赛道图像算出来的中心，就是赛道的中心
+                                                              //g_DirectionError赛道中心与图像中心的差值。
+    
     g_PwmServo = (int)(PWM_SVO_MIDDLE + (g_DirectionError * turn_p) + (g_DirectionError - last_g_DirectionError) * turn_d);
+    //是一个简单的舵机PID控制算法，用到了PD，所以我们得给turn_p和turn_d赋合适的值，让车能够完美的拐弯，根据速度不同要给不同的值。
     last_g_DirectionError = g_DirectionError;
     
-   if (g_PwmServo <= PWM_SVO_MIN)
-   {
-       g_PwmServo = PWM_SVO_MIN;
-   }
-   else if (g_PwmServo >= PWM_SVO_MAX)
+    if (g_PwmServo <= PWM_SVO_MIN)//保护
     {
-       g_PwmServo = PWM_SVO_MAX;
+        g_PwmServo = PWM_SVO_MIN;
+    }
+    else if (g_PwmServo >= PWM_SVO_MAX)//保护
+    {
+        g_PwmServo = PWM_SVO_MAX;
     }
     //经过非门
- 
+    //SET_PWM_SVO(g_PwmServo);
     SET_PWM_SVO(g_PwmServo);
     
 }     
