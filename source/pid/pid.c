@@ -24,9 +24,9 @@ float g_turn_p = 0.0;
 float g_turn_d = 0.0;
 float g_turn_i = 0.0;
 
-float g_speed_p = 160;
-float g_speed_i = 60;
-float g_speed_d = 10;
+float g_speed_p = 0.0;
+float g_speed_i = 0.0;
+float g_speed_d = 0.0;
 
 PID motorPID;
 PID turnPID;
@@ -97,7 +97,7 @@ int v_PIDCalc( PID *pp )
       pp->motor_PreU +=  (int)(pp -> v_Kp * d_error + pp -> v_Ki * error+ pp->v_Kd*dd_error)/10;//增量式PID
     }
     
-    if( pp->motor_PreU >= pp->v_MAX )//速度PID，防止调节最高溢出
+    if( pp->motor_PreU >= pp->v_MAX ) 		//速度PID，防止调节最高溢出
     {
          pp->motor_PreU = pp->v_MAX ;
     }

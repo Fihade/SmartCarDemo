@@ -16,15 +16,15 @@ int          g_Display;                                                 //≥° ˝ œ
 uint8        *p = NULL;                                                 //ÕºœÒ≤…ºØ”√÷∏’Î
 int          g_LineToDiv;                                               //∏Ù––≤…ºØ”√≥˝ ˝
 int          img_Cnt;
-//============================== ÕºœÒ ˝æ› ================================//
+//=============================== ÕºœÒ ˝æ› ================================//
 Int16_point  g_CenterPosition[MAX_POINT_NUM];                           //÷––ƒœﬂ
 Int16_point  g_LeftEdge[MAX_POINT_NUM], g_RightEdge[MAX_POINT_NUM];     //◊Û”“±ﬂ—ÿ
-uint8 	video_ori[MAX_VIDEO_LINE][MAX_VIDEO_POINT] = {0};
+uint8 	     video_ori[MAX_VIDEO_LINE][MAX_VIDEO_POINT] = {0};
 int          g_CenterNum;                                               //÷––ƒµ„∏ˆ ˝
 int          g_LeftEdgeNum, g_RightEdgeNum;                             //◊Û”“±ﬂ—ÿµ„∏ˆ ˝
 INT32U Temp = 0;                                                        //≤…ºØ”√ª∫≥Â±‰¡ø
 //============================== ÕºœÒ¥¶¿Ì”√±‰¡ø ==========================//
-uint16       g_Start[10], g_End[10], g_SEnum;                           //∞◊øÈ∆µ„°¢∞◊øÈ÷’µ„°¢∞◊øÈ∏ˆ ˝
+uint16       g_Start[10], g_End[10], g_SEnum, g_BEnum;                           //∞◊øÈ∆µ„°¢∞◊øÈ÷’µ„°¢∞◊øÈ∏ˆ ˝°¢ ∫⁄øÈ∏ˆ ˝
 uint8        g_SearchFlag;
 int          g_Cover;
 uint8        g_CoverIndex[10],g_CoverNum;
@@ -39,137 +39,170 @@ int     g_DirectionError;
 int     last_g_DirectionError;
 int     g_PwmServo;
 int     g_speed_final;
-int     turn_p = 0.0;
-int     turn_d = 0.0;
+float     turn_p = 0.0;
+float     turn_d = 0.0;
 //µÁª˙øÿ÷∆±‰¡ø
 int     g_pulse;                                                       //±’ª∑PIDøÿ÷∆µƒ∑¥¿°÷µ
 int     g_speed_feedback;
 int     g_PwmMotor;
 //============================== ˝æ›¥´ ‰===============================//
-INT8U   g_SendPic = 1;                                                 //»Áπ˚“™”√¥Æø⁄…œŒªª˙ø¥ÕºœÒ£¨‘Ú∞—∏√±‰¡ø÷√“ª£¨Ω®“Èø¥ÕºœÒ ±∞—∂Êª˙∫ÕµÁª˙πÿ±’
+INT8U   g_SendPic = 0;                                                //»Áπ˚“™”√¥Æø⁄…œŒªª˙ø¥ÕºœÒ£¨‘Ú∞—∏√±‰¡ø÷√“ª£¨Ω®“Èø¥ÕºœÒ ±∞—∂Êª˙∫ÕµÁª˙πÿ±’£°£°£°£°£°£°£°£°£°£°£°£°£°
 INT16U  g_SendIndex;
-     
 
 
 
-/******************************************************************************/
+    int Right_n = 0;
+    int Left_n = 0;
+    int Move_Edg_L ;
+    int Move_Edg_R;
+
+
+
+/*****************************************************************************/
 /******************************F U N C T I O N S  *****************************/
 /******************************************************************************/
 /*
 * Schedule÷–±‰¡ø≥ı ºªØ
 */
-void ScheduleInit(void)//±‰¡ø≥ı ºªØ
+void ScheduleInit(void)
 {
     Running_Init();               //‘À––≤Œ ˝≥ı ºªØ
     PID_Init();                   //PID≥ı ºªØ
                   
-    //Choise();
+    //Choise();                   //º¸≈Ã∫Ø ˝£¨‘› ±≤ª”√
     
     g_Line = 0;
     
     TIME2_interrupt_DIS(); 	 //µÁª˙÷–∂œ∑˛ŒÒ≥Ã–Úπÿ±’,PIT2  
     TIME2_RESET();
     
-    ENABLE_INTERRUPT_HREF();//ø™∆Ù––÷–∂œ
-    ENABLE_INTERRUPT_VSYNC();//ø™∆Ù≥°÷–∂œ
+    ENABLE_INTERRUPT_HREF();
+    ENABLE_INTERRUPT_VSYNC();
+}
+/*
+function name:  running_init
+description:    init
+*/
+void Running_Init(void)
+{   
+    //≤¶¬Îø™πÿ
+
+  g_speed_p = 150;                //µÁª˙pid 
+  g_speed_i = 70;
+  g_speed_d = 1;
+  
+  
+  if(JM_0_STATUS())//1 Õ˘œ¬
+  {
+    LED_A_ON();    
+    turn_p = 7;                  //∂Êª˙pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.6;                    //∂Êª˙pid d       1     1    1.2     1.2         1        1       1    
+    g_speed_final = 45;          //µÁª˙ÀŸ∂»∏≥÷µ
+  }
+  
+  else if(JM_1_STATUS())
+  {
+    LED_B_ON(); 
+    turn_p = 7;                  //∂Êª˙pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.72;                    //∂Êª˙pid d       1     1    1.2     1.2         1        1       1    
+    g_speed_final = 40;          //µÁª˙ÀŸ∂»∏≥÷µ
+  }
+  
+  else if(JM_2_STATUS())
+  {
+    LED_C_ON();   
+    turn_p = 7;                  //∂Êª˙pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.74;                    //∂Êª˙pid d       1     1    1.2     1.2         1        1       1   
+    g_speed_final = 40;          //µÁª˙ÀŸ∂»∏≥÷µ
+  }
+  
+  else  if(JM_3_STATUS())
+  {
+    //
+    LED_D_ON();   
+    turn_p = 7.15;                  //∂Êª˙pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.725;                    //∂Êª˙pid d       1     1    1.2     1.2         1        1       1  
+    g_speed_final = 40;          //µÁª˙ÀŸ∂»∏≥÷µ
+  }
+  else
+  {
+    turn_p = 7;                  //∂Êª˙pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.75;                    //∂Êª˙pid d       1     1    1.2     1.2         1        1       1  
+    g_speed_final = 40;          //µÁª˙ÀŸ∂»∏≥÷µ
+  }
+  
 }
 
-void Running_Init(void)//≥ı ºªØ
+/******************************************************************************/
+/*
+* ∫ÛÃ®¥¶¿Ì∫Ø ˝
+*/
+void Running(void)
 {
-    if(JM_0_STATUS())//≤¶¬Îø™πÿ
-      LED_A_ON();
-    
-    if(JM_1_STATUS())//≤¶¬Îø™πÿ
-      LED_B_ON(); 
-    
-    if(JM_2_STATUS())//≤¶¬Îø™πÿ
-      LED_C_ON();   
-    
-    if(JM_3_STATUS())//≤¶¬Îø™πÿ
-      LED_D_ON();
+  //============================≤…ºØº∞À—À˜÷––ƒ==============================//  
+  Search();
   
-    g_speed_p = 150;//µÁª˙PID£¨P
-    g_speed_i = 90;//µÁª˙PID£¨I
-    g_speed_d = 0;//µÁª˙PID£¨D
+}
+
+
+/*
+* vsync_isr≥°÷–∂œ∑˛ŒÒ∫Ø ˝£¨
+*/
+void vsync_isr(void)
+{
+  CLR_FLAG_VSYNC();  	        //«Â≥˝≥°÷–∂œ±Í÷æ£¨ø™∆Ù––÷–∂œ
   
-    turn_p = 10;//∂Êª˙PID°£P
-    turn_d = 2;//∂Êª˙PID°£D
-    
-    g_speed_final = 30;//µÁª˙ÀŸ∂»∏≥÷µ
+  g_Line = 0;
+  
+  ENABLE_INTERRUPT_HREF();   //ø™∆Ù––÷–∂œ£¨––÷–∂œºØ¬˙60––÷Æ∫Ûªª≥°
+  
+  // ≥°–Úº‡øÿ
+  if(img_Cnt %5 ==0)
+  {
+    LED_0_REV();
+  }
+  img_Cnt++;
 }
 
 /*
- * ∫ÛÃ®¥¶¿Ì∫Ø ˝
- */
-void Running(void)//÷˜‘À––∫Ø ˝
+* href_isr––÷–∂œ∑˛ŒÒ∫Ø ˝
+*/
+void href_isr(void)
 {
-    //============================≤…ºØº∞À—À˜÷––ƒ==============================//  
-    Search();
-
-}
-
-/*
- * vsync_isr≥°÷–∂œ∑˛ŒÒ∫Ø ˝
- */
-void vsync_isr(void)//≥°÷–∂œ∫Ø ˝
-{
-    CLR_FLAG_VSYNC();  	        //«Â≥˝≥°÷–∂œ±Í÷æ£¨ø™∆Ù––÷–∂œ
-    										
-    g_Line = 0;
-     
-    ENABLE_INTERRUPT_HREF();   //ø™∆Ù––÷–∂œ
-
-    // ≥°–Úº‡øÿ
-    if(img_Cnt %5 ==0)
+  CLR_FLAG_HREF();	
+  
+  //=================================∑÷––≤…ºØ===============================// 
+  g_Line++;
+  
+  if (VIDEO_WAIT == g_VideoFlag)
+  {
+    if (g_Line >= START_VIDEO_LINE)
     {
-      LED_0_REV();
+      g_VideoFlag = VIDEO_ACQUISITION;
+      g_ImageLine = 0;
+      g_LineToDiv = 3;
     }
-    img_Cnt++;
-}
-
-void href_isr(void)//––÷–∂œ∫Ø ˝
-{
-    CLR_FLAG_HREF();	
-
-    //=================================∑÷––≤…ºØ===============================//
-    g_Line++;
-        
-    if (VIDEO_WAIT == g_VideoFlag)//µ»¥˝◊¥Ã¨
-    {
-        if (g_Line >= START_VIDEO_LINE)
-        {
-            g_VideoFlag = VIDEO_ACQUISITION;
-            g_ImageLine = 0;
-            g_LineToDiv = 3;
-        }
-    }
-    // ˝æ›≤…ºØ◊¥Ã¨
-    else if (VIDEO_ACQUISITION == g_VideoFlag)//«Î«Û◊¥Ã¨
-    {
-        if (g_ImageLine >= 20 && g_LineToDiv == 3)   //∑÷––≤…ºØ∑Ω Ω£¨º¥…œ√Ê20–– «∏Ù1––≤…“ª–– œ¬√Ê40–– «∏Ù2––≤…“ª––
-            g_LineToDiv = 2;
-        if(g_Line % g_LineToDiv == 0)
-        {          
-            int i;
-		
-            Delay_T3_uS(9);//’˚ÃÂÕºœÒ”““∆£®º”¥Û£© ◊Û“∆£®ºı–°£©
-		
-            p = video_ori[g_ImageLine];
-            
-            for(i = 0; i < MAX_VIDEO_POINT; i++)   //∏≤∏« ΩÕºœÒ≤…ºØ
-            {
-                Temp = (VIDEO_PORT)>>8;
-                p[i] = (uint8)Temp;
-                for (int m = 0; m < 3; m ++);
-                 asm("nop");asm("nop");asm("nop");
-		      asm("nop");asm("nop");
-			asm("nop");asm("nop");asm("nop");
-		      asm("nop");asm("nop");
-			asm("nop");asm("nop");asm("nop");
-		      asm("nop");asm("nop");//º”¥ÛÕºœÒ√ø“ª––µ„”Îµ„÷Æº‰µƒº‰∏Ù  ‘ˆ∂‡ πÕºœÒ∑≈¥Û
-                //’‚¿Ô“≤ø…“‘–¥◊˜°∞g_VideoImageData[g_VideoImageLine][i]=(VIDEO_PORT);°±¥Ûº“◊‘º∫ø¥ø¥’‚¡Ω÷÷–¥∑®µƒ«¯±
-            }
-                   
+  }
+  // ˝æ›≤…ºØ◊¥Ã¨
+  else if (VIDEO_ACQUISITION == g_VideoFlag)
+  {
+    if (g_ImageLine >= 20 && g_LineToDiv == 3)   //∑÷––≤…ºØ∑Ω Ω£¨º¥…œ√Ê20–– «∏Ù1––≤…“ª–– œ¬√Ê40–– «∏Ù2––≤…“ª––
+      g_LineToDiv = 2;
+    if(g_Line % g_LineToDiv == 0)
+    {          
+      int i;
+      Delay_T3_uS(6.5);
+      p = video_ori[g_ImageLine];
+      
+      for(i = 0; i < MAX_VIDEO_POINT; i++)   //∏≤∏« ΩÕºœÒ≤…ºØ
+      {
+        Temp = (VIDEO_PORT)>>8;
+        p[i] = (uint8)Temp;
+        for (int m = 0; m < 3; m ++);
+        asm("nop");asm("nop");asm("nop");
+        //’‚¿Ô“≤ø…“‘–¥◊˜°∞g_VideoImageData[g_VideoImageLine][i]=(VIDEO_PORT);°±¥Ûº“◊‘º∫ø¥ø¥’‚¡Ω÷÷–¥∑®µƒ«¯±
+      }
+      
             g_ImageLine ++;
         }
         if(g_ImageLine >= MAX_VIDEO_LINE)
@@ -178,12 +211,12 @@ void href_isr(void)//––÷–∂œ∫Ø ˝
         }
     }
     //ÕºœÒ¥¶¿Ì∫Õøÿ÷∆◊¥Ã¨
-    else if (VIDEO_SEARCH == g_VideoFlag)   //≤…ºØΩ· ¯ ø™ º∂‘ÕºœÒΩ¯––¥¶¿Ì
+    else if (VIDEO_SEARCH == g_VideoFlag)       //≤…ºØΩ· ¯ ø™ º∂‘ÕºœÒΩ¯––¥¶¿Ì
     {
         ;
     }
     //Õ¨≤Ω◊¥Ã¨
-    else if (VIDEO_FINISH == g_VideoFlag)   //¥¶¿ÌΩ· ¯ µ»¥˝Õ¨≤Ωœ¬“ª≥°ÕºœÒ
+    else if (VIDEO_FINISH == g_VideoFlag)       //¥¶¿ÌΩ· ¯ µ»¥˝Õ¨≤Ωœ¬“ª≥°ÕºœÒ
     {
             DISABLE_INTERRUPT_HREF();					//Ω˚”√––÷–∂œ
             ENABLE_INTERRUPT_VSYNC();					//≥°÷–∂œ πƒ‹
@@ -196,9 +229,9 @@ void href_isr(void)//––÷–∂œ∫Ø ˝
 }
 
 
-void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
+void Search(void)
 {
-    int i, line, white_width = 0;
+    int i, line, white_width = 0, times = 0;;
     //=======================ÕºœÒ ∂±=========================//
         //PS£∫¥À ±Œ“√«µƒÕºœÒ“—æ≠Ã·»°ÕÍ±œ Œ“√«¥”µ◊≤øø™ º£¨œÚ…œ ∂±ÕºœÒ
         //ÕºœÒ ∂± ˝æ›≥ı ºªØ
@@ -210,35 +243,39 @@ void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
         {
             // ◊œ» «Û≥ˆ±æ––À˘”–∞◊øÈµƒŒª÷√
             g_SEnum = 0;  //±æ––µƒ∞◊øÈº∆ ˝∆˜«Â¡„
-            if (video_ori[line][MAX_VIDEO_POINT-1] > IMAGE_MIDDLE)  //¥Û”⁄„–÷µŒ™∞◊ –°”⁄„–÷µŒ™∫⁄ ◊Û±ﬂ◊¯±Í‘≠µ„
+            g_BEnum = 0;  //±æ––µƒ∫⁄øÈº∆ ˝∆˜«Â¡„
+            if (video_ori[line][MAX_VIDEO_POINT-1] > IMAGE_MIDDLE)  //¥Û”⁄„–÷µŒ™∞◊ –°”⁄„–÷µŒ™∫⁄
                 g_Start[g_SEnum] = 0;
-		
-            for (i = MAX_VIDEO_POINT-1; i > 0; i --)//÷±Ω”…®165∏ˆµ„£¨¥”µ⁄164£®◊Û£©µ„ø™ µ⁄0£®”“£©∏ˆ ˝æ›µ„ º…®µΩ
+            for (i = MAX_VIDEO_POINT-1; i > 0; i --)
             {
-		  if (g_SEnum >= 10)// Æ∏ˆ∞◊øÈ ÕÀ≥ˆ
-		  {
-		    break;
-		  }
-		  else if (video_ori[line][i] > IMAGE_MIDDLE && video_ori[line][i-1] <= IMAGE_MIDDLE)//∞◊øÈµƒ÷’µ„
-		  {
-		    g_End[g_SEnum] = MAX_VIDEO_POINT-i;
-		    g_SEnum ++;
-		  }
-		  else if (video_ori[line][i] <= IMAGE_MIDDLE && video_ori[line][i-1] > IMAGE_MIDDLE)//∞◊øÈµƒ∆µ„
-		  {
-		    g_Start[g_SEnum] = MAX_VIDEO_POINT-i-1;
-		  }   
-		  
+                if (video_ori[line][i] > IMAGE_MIDDLE && video_ori[line][i-1] <= IMAGE_MIDDLE)
+                {
+                    g_End[g_SEnum] = MAX_VIDEO_POINT-i;
+                    g_SEnum ++;
+                    
+                }
+                else if (video_ori[line][i] <= IMAGE_MIDDLE && video_ori[line][i-1] > IMAGE_MIDDLE)
+                {
+                    g_Start[g_SEnum] = MAX_VIDEO_POINT-i-1;
+                    g_BEnum ++;
+                }
+                
+                else if (g_SEnum >= 10 || g_BEnum >=10)
+                {
+                    break;
+                }
             }
-            if (video_ori[line][0] > IMAGE_MIDDLE && g_SEnum < 10)//µ±◊Ó∫Û“ª∏ˆµ„£®”“±ﬂ£© «∞◊øÈ ±£¨Œ™÷’µ„
+            
+            
+            if (video_ori[line][0] > IMAGE_MIDDLE && g_SEnum < 10)
             {
                 g_End[g_SEnum] = MAX_VIDEO_POINT-1;
                 g_SEnum ++;
             }
+            
+            
             //∞—◊Óœ¬√Êµƒƒ«“ª––µ•∂¿ƒ√≥ˆ¿¥¥¶¿Ì ◊ˆŒ™∫Û–¯¥¶¿Ìµƒª˘¥°
-		
-		//‘⁄¥ÛFOR—≠ª∑¿Ô√Ê£¨œ»’“µΩ∞◊øÈøÌ∂»¥Û”⁄60µƒƒ«“ª––°£
-            if (g_SearchFlag)                    //◊Óœ¬“ª––¥¶¿Ì±Í÷æ  
+            if (g_SearchFlag)                     //◊Óœ¬“ª––¥¶¿Ì±Í÷æ
             {
                 int temp_mark = 0;
                 if (g_SEnum == 0)
@@ -246,8 +283,7 @@ void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
                   continue;
                 }
                 white_width = g_End[0] - g_Start[0];
-		    
-                for (i = 1; i < g_SEnum; i ++)  //÷±Ω”«Û◊ÓøÌµƒ∞◊øÈ
+                for (i = 1; i < g_SEnum; i ++)   //÷±Ω”«Û◊ÓøÌµƒ∞◊øÈ
                 {
                     if (g_End[i] - g_Start[i] >= white_width)
                     {
@@ -267,11 +303,10 @@ void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
             }
             else
             {
-                if (g_SEnum == 0)//µ±’‚––√ª”–∞◊øÈ£¨÷±Ω”Ã¯≥ˆ¥ÛFOR—≠ª∑
+                if (g_SEnum == 0)
                 {
                     break;
                 }
-		    //—∞’“’‚“ª––”Î…œ“ª––¡¨Õ®µƒ∞◊øÈ
                 for (i = 0,g_CoverNum = 0; i < g_SEnum; i ++)
                 {
                     //∏≤∏«πÿœµ£¨“ÚŒ™ÕºœÒ «“ª∏ˆ¡™Õ®«¯”Ú ”⁄ «’“”Î…œ“ª––“—æ≠’“µΩ∞◊øÈœ‡¡™Õ®µƒ∞◊øÈ
@@ -282,8 +317,6 @@ void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
                         g_CoverNum ++;
                     }
                 }
-		    
-		    //’“µΩ¡¨Õ®∞◊øÈ∫Û£¨ø™ ºΩ¯––—∞’“◊Ó¡¨Õ®µƒ∞◊øÈ
                 if (g_CoverNum == 1) //»Áπ˚÷ª”–“ª∏ˆ¡™Õ®µƒ ÷±Ω”»°≥ˆ’‚∏ˆ¡™Õ®∞◊øÈ
                 {
                     g_LeftEdge[g_LeftEdgeNum].x = line;
@@ -303,7 +336,6 @@ void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
                     temp_center = (g_Start[g_CoverIndex[0]] + g_End[g_CoverIndex[0]]) / 2;
                     last_center = (g_LeftEdge[g_LeftEdgeNum-1].y + g_RightEdge[g_RightEdgeNum-1].y) / 2;
                     temp_dis = ABS(last_center - temp_center);
-			  
                     for (i = 1; i < g_CoverNum; i ++)
                     {
                         temp_center = (g_Start[g_CoverIndex[i]] + g_End[g_CoverIndex[i]]) / 2;
@@ -313,18 +345,45 @@ void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
                             temp_mark = i;
                         }
                     }
-			  //’“µΩƒ«∏ˆ◊ÓΩ”Ω¸µƒ∞◊øÈ£¨»ª∫Û∞—◊Û”“±ﬂ‘µ∏≥÷µ
                     g_LeftEdge[g_LeftEdgeNum].x = line;
-                    g_LeftEdge[g_LeftEdgeNum++].y = g_Start[g_CoverIndex[temp_mark]];
+                    g_LeftEdge[g_LeftEdgeNum++].y = g_Start[temp_mark];
                     g_RightEdge[g_RightEdgeNum].x = line;
-                    g_RightEdge[g_RightEdgeNum++].y = g_End[g_CoverIndex[temp_mark]];
+                    g_RightEdge[g_RightEdgeNum++].y = g_End[temp_mark];
                 }
+            }
+            
+            
+            //=======================∆µ„≈–∂œ========================//
+            if(g_SEnum >= 5 && g_BEnum >= 5)
+            {
+                times++;
+                if(times >= 20)
+                {
+                    g_PwmServo = 9245;
+                    Delay_T3_mS(1000);
+                    g_speed_final = 0; 
+                }
+                       //µΩ¥Ô÷’µ„£¨µÁª˙ÀŸ∂»±‰Œ™0
             }
         }
         //=======================∆µ„≈–∂œ========================//
+
+        
         
         //======================= Æ◊÷¥¶¿Ì========================//
-        
+        int Width, width;
+        float discuss;
+        for(int i = 0 ; i<MAX_VIDEO_LINE - 1 ; i++){
+            //Width = g_RightEdge[0].y - g_LeftEdge[0].x;
+            //width = g_RightEdge[i].y - g_LeftEdge[i].x;
+             //discuss = width / Width;
+            if( g_RightEdge[i].y >= 158 && g_LeftEdge[i].y <= 4)
+            {
+                g_CenterPosition[i].x = g_RightEdge[i].x; 
+                g_CenterPosition[i].y = (g_RightEdge[0].y + g_LeftEdge[0].y) / 2;
+            }
+            else break;
+        }
         //=======================÷––ƒ«Û»°========================//
         /*
         *
@@ -333,25 +392,117 @@ void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
         ±ﬂµƒ ˝œ‡µ»£¨∂¯÷––ƒŒª÷√÷±Ω””…◊Û”“±ﬂœ‡º”≥˝2À˘µ√
         *
         */
+                
+
+//        //‘≠¿¥µƒ¥˙¬Î»Áœ¬£∫
+//        g_CenterNum = g_RightEdgeNum;
+//        
+//        for (i = 0; i < g_RightEdgeNum; i ++)
+//        {
+//            g_CenterPosition[i].x = g_RightEdge[i].x;
+//            g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;         
+//        }
+
+       
+        //float X0, Y0, k0;
+        
+        //Ω√’˝Õ‰µ¿«˙œﬂ
         g_CenterNum = g_RightEdgeNum;
-        for (i = 0; i < g_RightEdgeNum; i ++)
+        
+        Right_n = 0;
+        Left_n = 0;
+        
+       int Move_Edg = (g_RightEdge[0].y - g_LeftEdge[0].y)/2;
+        
+        Move_Edg_L = ABS(g_LeftEdge[g_CenterNum-1].y - g_LeftEdge[0].y);
+         Move_Edg_R = ABS(g_RightEdge[g_CenterNum-1].y - g_RightEdge[0].y);
+        
+        for(int s=0; s <= g_CenterNum; s++)
         {
-            g_CenterPosition[i].x = g_RightEdge[i].x;
-            g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;         
+            if(g_LeftEdge[s].y <= 10)         //◊Û◊™   º¥”–∫‹∂‡––µƒg_LeftEdge[] = 0
+            {
+                Left_n++;
+            }
+            else if(g_RightEdge[s].y >= 150)    //”“◊™   º¥”–∫‹∂‡––µƒg_RightEdge[] >=160
+            {
+                Right_n++;
+            }
         }
+        
+        
+        if((Left_n >= MIN(20,g_CenterNum) && Right_n <= 10 )|| ( Move_Edg_R >100 && Move_Edg_L < 50))          //◊Û◊™
+        {
+             //X0 = g_LeftEdgeNum + 1;
+             //Y0 = (g_RightEdge[0].y - g_LeftEdge[0].y) / 2;       // “‘≈◊ŒÔœﬂªÚ’ﬂ“ª‘™∫Ø ˝µƒ–Œ Ω¿¥ƒ‚∫œøÿ÷∆÷––ƒµƒπÏº£
+             //k0 = -X0/Y0;                                                 // X = (-X0/Y0)*Y + X0
+             for (i = 0; i < g_LeftEdgeNum; i++)
+             {
+                  g_CenterPosition[i].x = g_RightEdge[i].x;   
+                  g_CenterPosition[i].y = (g_RightEdge[i].y - Move_Edg);
+                
+                  //m=0;
+                  //n=0;
+             }       
+        }
+        else if((Left_n<=10 && Right_n >= MIN(20,g_CenterNum)) || (Move_Edg_L > 100 && Move_Edg_R < 50))    //”“◊™
+        {
+          // X0 = g_RightEdgeNum + 1;
+          // Y0 = (g_RightEdge[0].y - g_LeftEdge[0].y) / 2;       // “‘≈◊ŒÔœﬂªÚ’ﬂ“ª‘™∫Ø ˝µƒ–Œ Ω¿¥ƒ‚∫œøÿ÷∆÷––ƒµƒπÏº£
+          // k0 = X0/Y0;                                         //   X = ( X0/(161-Y0) )*Y - kY0
+           for (i = 0; i < g_RightEdgeNum; i ++)
+           {
+                g_CenterPosition[i].x = g_RightEdge[i].x;   
+                g_CenterPosition[i].y = (g_LeftEdge[i].y + Move_Edg);
+                
+               // m=0;
+                //n=0;
+           }
+        }
+        else //(n<=10 && m<=10)    //÷±––
+        {
+          
+           for (i = 0; i < g_RightEdgeNum; i ++)
+           {
+            g_CenterPosition[i].x = g_RightEdge[i].x;
+            g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;           
+           }
+           // m=0;
+           // n=0;
+        }
+        
     
         //===================◊™Ω«“‘º∞µÁª˙øÿ÷∆====================//
         //º”»®∆Ωæ˘∑®«Û∑ΩœÚøÿ÷∆
         g_DirectionControlWhole = 0;
         g_DirectionControlLine = 0;
-        for (i = 0; i < g_CenterNum; i ++)
+        
+        int tmpx, g_LowLine, g_HighLine;
+        g_LowLine = MIN(g_CenterNum, 10);
+        g_HighLine = MIN(g_CenterNum, 30);
+        
+        for (i = 0; i < g_CenterNum ; i ++)
         {
             if (g_CenterPosition[i].y >= 0 && g_CenterPosition[i].y <= MAX_VIDEO_POINT)
             {
-                g_DirectionControlLine += (int)g_CenterPosition[i].x;
-                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //◊¢“‚ ˝æ›≤ª“™“Á≥ˆ    
+              
+                //◊‘º∫∏ƒΩ¯µƒÀ„∑®
+                if(g_CenterPosition[i].x < g_LowLine)
+                  tmpx = ( (int) g_CenterPosition[i].x)*1;
+                else if(g_CenterPosition[i].x > g_HighLine)
+                  tmpx = ( (int) g_CenterPosition[i].x)*5;
+                else
+                  tmpx = ( (int) g_CenterPosition[i].x)*3/;
+                
+                g_DirectionControlLine += tmpx;
+                g_DirectionControlWhole += (int) g_CenterPosition[i].y * tmpx;
+              
+               // ‘≠¿¥¥˙¬Î
+//                g_DirectionControlLine += (int)g_CenterPosition[i].x;
+//                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //◊¢“‚ ˝æ›≤ª“™“Á≥ˆ    c
             }
         }
+        
+        
         if (g_DirectionControlLine > 0)
         {
             g_DirectionControl = g_DirectionControlWhole / g_DirectionControlLine;
@@ -444,7 +595,7 @@ void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
         //======================◊¥Ã¨◊™ªª=========================//
     
         g_VideoFlag = VIDEO_FINISH;
-        g_Display ++;                   //º«¬º≥° ˝
+        g_Display++;                   //º«¬º≥° ˝
         //±Í∂® ±–Ú
         if (g_Display % 5 == 0)
         {
@@ -452,13 +603,15 @@ void Search(void)//ÕºœÒ≤…ºØ”Î¥¶¿Ì£¨“‘º∞º∆À„øÿ÷∆÷––ƒ
         }
 }
 
+
+
 //º∆ ± ±º‰
 int32 g_time = 0;
 /******************************************************************************/
 /*
  *4msøÿ÷∆÷–∂œ
  */
-void pit_4000uS_isr(void)//4ms÷–∂œ£¨”√”⁄øÿ÷∆µÁª˙£¨ «∏ˆ÷–∂œ∫Ø ˝
+void pit_4000uS_isr(void)
 {
     //clear the interrupt flag to avoid re-entrance
     CLR_FLAG_PIT4000uS();
@@ -474,47 +627,63 @@ void pit_4000uS_isr(void)//4ms÷–∂œ£¨”√”⁄øÿ÷∆µÁª˙£¨ «∏ˆ÷–∂œ∫Ø ˝
     
 }
 
-void Car_Run(void)//µÁª˙øÿ÷∆∫Ø ˝£¨“‘º∞ÀŸ∂»µƒ∏≥÷µ°£
-{
 
-    motorPID.vi_Ref = g_speed_final;//Ω´÷Æ«∞∏≥π˝÷µµƒ±‰¡ø∏¯µÁª˙PIDÀ„∑®µƒ≤Œøº÷µ
-    g_PwmMotor = v_PIDCalc(&motorPID);//∏˘æ›µÁª˙PIDÀ„∑®£¨À„≥ˆ“™ ‰≥ˆµƒPWM÷µ°£
+/*
+function name:  car_run
+parameters:     none
+author:         
+date:           2017-9-10
+description:    control car run forward
+*/
+void Car_Run(void)
+{
+  if(g_time >12000){
     
-    if(g_PwmMotor > 1000)//±£ª§
+    
+  }
+    motorPID.vi_Ref = -g_speed_final;
+    g_PwmMotor = v_PIDCalc(&motorPID);
+    
+    if(g_PwmMotor > 1000)
     {
         g_PwmMotor = 1000;
     }
-    else if(g_PwmMotor < -1000)//±£ª§
+    else if(g_PwmMotor < -1000)
     {
         g_PwmMotor = -1000;
     }
 
-   g_PwmMotor=200;
-    SET_PWM_MOTR(g_PwmMotor);//◊Ó÷’ ‰≥ˆ∏¯µÁª˙µƒPWM°£
+   // g_PwmMotor= -400;           //ø™ª∑≤‚ ‘µÁª˙”√
+    SET_PWM_MOTR(g_PwmMotor);
 
 }
 
-void Car_Turn(void)//∂Êª˙£¨◊™œÚøÿ÷∆∫Ø ˝
+
+/*
+function name:  car_turn
+parameters:     none
+author:         
+date:           2017-9-10
+description:    control car turn
+*/
+void Car_Turn(void)
 {
     //÷–÷µ◊™ªªŒ™∆´¿Î¡ø£¨∑Ω±„º∆À„∂Êª˙◊™œÚ
-    g_DirectionError = (MID_VIDEO_POINT - g_DirectionControl);//MID_VIDEO_POINT «…„œÒÕ∑µƒ÷––ƒ±‰¡ø£¨“≤æÕ «≥µµƒŒª÷√±‰¡ø°£
-                                                              //g_DirectionControl∏˘æ›»¸µ¿ÕºœÒÀ„≥ˆ¿¥µƒ÷––ƒ£¨æÕ «»¸µ¿µƒ÷––ƒ
-                                                              //g_DirectionError»¸µ¿÷––ƒ”ÎÕºœÒ÷––ƒµƒ≤Ó÷µ°£
+    g_DirectionError = (MID_VIDEO_POINT - g_DirectionControl);
     
     g_PwmServo = (int)(PWM_SVO_MIDDLE + (g_DirectionError * turn_p) + (g_DirectionError - last_g_DirectionError) * turn_d);
-    // «“ª∏ˆºÚµ•µƒ∂Êª˙PIDøÿ÷∆À„∑®£¨”√µΩ¡ÀPD£¨À˘“‘Œ“√«µ√∏¯turn_p∫Õturn_d∏≥∫œ  µƒ÷µ£¨»√≥µƒ‹πªÕÍ√¿µƒπ’Õ‰£¨∏˘æ›ÀŸ∂»≤ªÕ¨“™∏¯≤ªÕ¨µƒ÷µ°£
     last_g_DirectionError = g_DirectionError;
     
-    if (g_PwmServo <= PWM_SVO_MIN)//±£ª§
+   if (g_PwmServo <= PWM_SVO_MIN)
+   {
+       g_PwmServo = PWM_SVO_MIN;
+   }
+   else if (g_PwmServo >= PWM_SVO_MAX)
     {
-        g_PwmServo = PWM_SVO_MIN;
-    }
-    else if (g_PwmServo >= PWM_SVO_MAX)//±£ª§
-    {
-        g_PwmServo = PWM_SVO_MAX;
+       g_PwmServo = PWM_SVO_MAX;
     }
     //æ≠π˝∑«√≈
-    //SET_PWM_SVO(g_PwmServo);
+ 
     SET_PWM_SVO(g_PwmServo);
     
 }     

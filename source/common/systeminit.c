@@ -18,12 +18,12 @@ void system_init(void)
     uart_init();
     i2c_init();
     i2c_init_add();
-    Delay_T3_mS(500);
+    Delay_T3_mS(2000);
 
-//    if(sccb_init()==0)
-//    {
-//      while(1);     
-//    }
+    if(sccb_init()==0)
+    {
+      while(1);   //…„œÒÕ∑≥ı ºªØ ß∞‹  
+    }
  
 } // system_init
 /******************************************************************************/
