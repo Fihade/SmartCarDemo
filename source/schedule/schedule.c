@@ -89,7 +89,7 @@ description:    init
 void Running_Init(void)
 {   
     //拨码开关
-
+   //保证在连续十字弯处提前进入
   g_speed_p = 150;                //电机pid 
   g_speed_i = 70;
   g_speed_d = 1;
