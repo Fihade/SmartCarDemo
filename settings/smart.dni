@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-726146751
+Checksum=-588481764
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -72,12 +72,6 @@ Fmt18={W}42:g_path_far	3	0
 Fmt19={W}42:g_path_width	3	0
 Fmt20={W}42:g_speed_count	3	0
 Fmt21={W}42:line	3	0
-[Trace1]
-Enabled=0
-ShowSource=1
-[Trace2]
-Enabled=0
-ShowSource=0
 [SWOTraceWindow]
 PcSampling=0
 InterruptLogs=0
@@ -116,10 +110,6 @@ GraphEnabled=0
 ShowTimeLog=1
 ShowTimeSum=1
 SumSortOrder=0
-[Disassemble mode]
-mode=0
-[Breakpoints2]
-Count=0
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -127,6 +117,22 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[CallStackLog]
+Enabled=0
+[PowerProbe]
+Frequency=10000
+Probe0=I0
+ProbeSetup0=2 1 1 2 0 0
+[DriverProfiling]
+Enabled=0
+Mode=3
+Graph=0
+Symbiont=0
+Exclusions=
+[Disassemble mode]
+mode=0
+[Breakpoints2]
+Count=0
 [Aliases]
 A0=_ "C:\Documents and Settings\shubra\Desktop\2012全国赛\Microcontroller Program\20120727_刘&舒_new\source\cpu\start.c" ""
 A1=_ "C:\Documents and Settings\shubra\Desktop\2012全国赛\Microcontroller Program\20120805_刘&舒_NewImage2.0\source\common\systeminit.c" ""
@@ -190,15 +196,3 @@ A58=_ "E:\摄像头组例程V2.0\智能车校内赛2016例程\source\cpu\start.c" ""
 A59=_ "E:\摄像头组例程V2.0\智能车校内赛2016例程\source\main.c" ""
 Count=60
 SuppressDialog=1
-[CallStackLog]
-Enabled=0
-[PowerProbe]
-Frequency=10000
-Probe0=I0
-ProbeSetup0=2 1 1 2 0 0
-[DriverProfiling]
-Enabled=0
-Mode=3
-Graph=0
-Symbiont=0
-Exclusions=

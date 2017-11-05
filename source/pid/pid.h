@@ -18,9 +18,9 @@
 #define MOTOR_PID_MIN         (-1000)      //电机PID输出下限
 
 /* 舵机转向 */
-#define PWM_SVO_MAX     9528         //左转的最大值
-#define PWM_SVO_MIN     8929       //右转的最大值
-#define PWM_SVO_MIDDLE  9228       //舵机中值
+#define PWM_SVO_MAX     9540        //左转的最大值
+#define PWM_SVO_MIN     8970       //右转的最大值
+#define PWM_SVO_MIDDLE  9220       //舵机中值
 #define TURN_Amplitude  MAX(PWM_SVO_MAX-PWM_SVO_MIDDLE,PWM_SVO_MIDDLE-PWM_SVO_MIN)
 
 #define TURN_PID_MAX         (TURN_Amplitude)  
