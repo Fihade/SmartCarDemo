@@ -316,7 +316,7 @@ const unsigned int MT9V022_reg[MT9V022_REG_NUM][2]=
    { 0x1C,    0x0002 },	    //DATA_COMPRESSION
 
 //[Reset Registers]
-   { 1,    15 },	//COL_WINDOW_START_REG
+   { 1,    25 },	//COL_WINDOW_START_REG
    { 2,    4   },	//ROW_WINDOW_START_REG
    { 3,   480  },	//ROW_WINDOW_SIZE_REG  480
    { 4,   752  },	//COL_WINDOW_SIZE_REG  A 752

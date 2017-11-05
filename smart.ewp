@@ -716,7 +716,7 @@
         </option>
         <option>
           <name>IlinkIcfFile</name>
-          <state>D:\2017&#x6821;&#x5185;&#x8D5B;&#x6444;&#x50CF;&#x5934;&#x56DB;&#x8F6e;&#x4F8B;&#x7A0B;\source\link\Ram.icf</state>
+          <state>$PROJ_DIR$\source\link\Ram.icf</state>
         </option>
         <option>
           <name>IlinkIcfFileSlave</name>

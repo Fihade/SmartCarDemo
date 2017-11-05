@@ -26,7 +26,7 @@ typedef int64   INT64S;
 #define   START_VIDEO_LINE	        105          	//图像起始行
 #define   MAX_VIDEO_POINT               162             //每行采集的点数
 #define   MID_VIDEO_POINT               81              //图像中心点
-#define   MAX_VIDEO_LINE	        60              //每场实际用到的行数
+#define   MAX_VIDEO_LINE	        60     //每场实际用到的行数
 #define   VIDEO_PORT                GPIOC_PDIR      //摄像头信号
 
 #define   SetBit(reg,bit)		    reg |= (1 << bit)
@@ -51,8 +51,7 @@ typedef struct      //图像数据结构
 
 /*********图像处理********/
 #define   MAX_POINT_NUM                 80                  //边沿和中心最大个数
-#define   IMAGE_MIDDLE                  185  
-//图像阈值，根据自己的图像适当调整
+#define   IMAGE_MIDDLE                  170  //图像阈值，根据自己的图像适当调整
 #define   WIDTH                         60                  //第一行白块宽度要求 根据前瞻以及看到的图像情况适当调整
 #define   INIT_DATA			250                 //无效数据
 

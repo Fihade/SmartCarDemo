@@ -24,7 +24,7 @@ int          g_CenterNum;                                               //中心点
 int          g_LeftEdgeNum, g_RightEdgeNum;                             //左右边沿点个数
 INT32U Temp = 0;                                                        //采集用缓冲变量
 //============================== 图像处理用变量 ==========================//
-uint16       g_Start[10], g_End[10], g_SEnum;                           //白块起点、白块终点、白块个数
+uint16       g_Start[10], g_End[10], g_SEnum, g_BEnum;                           //白块起点、白块终点、白块个数、 黑块个数
 uint8        g_SearchFlag;
 int          g_Cover;
 uint8        g_CoverIndex[10],g_CoverNum;
@@ -46,9 +46,18 @@ int     g_pulse;                                                       //闭环PID
 int     g_speed_feedback;
 int     g_PwmMotor;
 //==============================数据传输===============================//
-INT8U   g_SendPic = 1;                                                 //如果要用串口上位机看图像，则把该变量置一，建议看图像时把舵机和电机关闭！！！！！！！！！！！！！
+INT8U   g_SendPic = 0;                                                //如果要用串口上位机看图像，则把该变量置一，建议看图像时把舵机和电机关闭！！！！！！！！！！！！！
 INT16U  g_SendIndex;
-     
+
+INT8U  Str_ZhiDao;
+INT8U  Str_YouWan;
+INT8U  Str_ZuoWan;
+
+    int Right_n = 0;
+    int Left_n = 0;
+    int Cross = 0;
+    int Move_Edg_L ;
+    int Move_Edg_R;
 
 
 
@@ -81,109 +90,122 @@ void Running_Init(void)
 {   
     //拨码开关
 
-    if(JM_0_STATUS())//拨码1 上-ON
-    {
-      LED_A_ON();
-      
-    }
-    
-    if(JM_1_STATUS())//拨码2上-ON
-    {
-      LED_B_ON(); 
-    }
-    
-    if(JM_2_STATUS())//拨码3上-ON
-    {
-      LED_C_ON();   
-    }
-    
-    if(JM_3_STATUS()) //拨码4上-ON
-    {
-     //
-      LED_D_ON();  
-     }
-          
+  g_speed_p = 150;                //电机pid 
+  g_speed_i = 70;
+  g_speed_d = 1;
   
-    g_speed_p = 150;                  //电机pid 
-    g_speed_i = 70;
-    g_speed_d = 1;
   
-    turn_p = 7.5;                      //舵机pid p      11     8     10      9        9          8.5          8.6
-    turn_d = 0.4;                    //舵机pid d        1      1    1.2     1.2         1        1           1
-    
+  if(JM_0_STATUS())//1 往下
+  {
+    LED_A_ON();    
+    turn_p = 7;                  //舵机pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.7;                    //舵机pid d       1     1    1.2     1.2         1        1       1    
     g_speed_final = 35;          //电机速度赋值
+  }
+  
+  else if(JM_1_STATUS())
+  {
+    LED_B_ON(); 
+    turn_p = 7.2;                  //舵机pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.7;                    //舵机pid d       1     1    1.2     1.2         1        1       1    
+    g_speed_final = 35;          //电机速度赋值
+  }
+  
+  else if(JM_2_STATUS())
+  {
+    LED_C_ON();   
+    turn_p = 7.4;                  //舵机pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.6;                    //舵机pid d       1     1    1.2     1.2         1        1       1   
+    g_speed_final = 35;          //电机速度赋值
+  }
+  
+  else  if(JM_3_STATUS())
+  {
+    //
+    LED_D_ON();   
+    turn_p = 7.6;                  //舵机pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.6;                    //舵机pid d       1     1    1.2     1.2         1        1       1  
+    g_speed_final = 35;          //电机速度赋值
+  }
+  else
+  {
+    turn_p = 7.8;                  //舵机pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.6;                    //舵机pid d       1     1    1.2     1.2         1        1       1  
+    g_speed_final = 35;          //电机速度赋值
+  }
+  
 }
 
 /******************************************************************************/
 /*
- * 后台处理函数
- */
+* 后台处理函数
+*/
 void Running(void)
 {
-    //============================采集及搜索中心==============================//  
-    Search();
-
+  //============================采集及搜索中心==============================//  
+  Search();
+  
 }
 
 
 /*
- * vsync_isr场中断服务函数，
- */
+* vsync_isr场中断服务函数，
+*/
 void vsync_isr(void)
 {
-    CLR_FLAG_VSYNC();  	        //清除场中断标志，开启行中断
-    										
-    g_Line = 0;
-     
-    ENABLE_INTERRUPT_HREF();   //开启行中断，行中断集满60行之后换场
-
-    // 场序监控
-    if(img_Cnt %5 ==0)
-    {
-      LED_0_REV();
-    }
-    img_Cnt++;
+  CLR_FLAG_VSYNC();  	        //清除场中断标志，开启行中断
+  
+  g_Line = 0;
+  
+  ENABLE_INTERRUPT_HREF();   //开启行中断，行中断集满60行之后换场
+  
+  // 场序监控
+  if(img_Cnt %5 ==0)
+  {
+    LED_0_REV();
+  }
+  img_Cnt++;
 }
 
 /*
- * href_isr行中断服务函数
- */
+* href_isr行中断服务函数
+*/
 void href_isr(void)
 {
-    CLR_FLAG_HREF();	
-
-    //=================================分行采集===============================// 
-    g_Line++;
-        
-    if (VIDEO_WAIT == g_VideoFlag)
+  CLR_FLAG_HREF();	
+  
+  //=================================分行采集===============================// 
+  g_Line++;
+  
+  if (VIDEO_WAIT == g_VideoFlag)
+  {
+    if (g_Line >= START_VIDEO_LINE)
     {
-        if (g_Line >= START_VIDEO_LINE)
-        {
-            g_VideoFlag = VIDEO_ACQUISITION;
-            g_ImageLine = 0;
-            g_LineToDiv = 3;
-        }
+      g_VideoFlag = VIDEO_ACQUISITION;
+      g_ImageLine = 0;
+      g_LineToDiv = 3;
     }
-    //数据采集状态
-    else if (VIDEO_ACQUISITION == g_VideoFlag)
-    {
-        if (g_ImageLine >= 20 && g_LineToDiv == 3)   //分行采集方式，即上面20行是隔1行采一行 下面40行是隔2行采一行
-            g_LineToDiv = 2;
-        if(g_Line % g_LineToDiv == 0)
-        {          
-            int i;
-            Delay_T3_uS(1);
-            p = video_ori[g_ImageLine];
-            
-            for(i = 0; i < MAX_VIDEO_POINT; i++)   //覆盖式图像采集
-            {
-                Temp = (VIDEO_PORT)>>8;
-                p[i] = (uint8)Temp;
-                for (int m = 0; m < 3; m ++);
-                 asm("nop");asm("nop");asm("nop");
-                //这里也可以写作“g_VideoImageData[g_VideoImageLine][i]=(VIDEO_PORT);”大家自己看看这两种写法的区别
-            }
-                   
+  }
+  //数据采集状态
+  else if (VIDEO_ACQUISITION == g_VideoFlag)
+  {
+    if (g_ImageLine >= 20 && g_LineToDiv == 3)   //分行采集方式，即上面20行是隔1行采一行 下面40行是隔2行采一行
+      g_LineToDiv = 2;
+    if(g_Line % g_LineToDiv == 0)
+    {          
+      int i;
+      Delay_T3_uS(6.5);
+      p = video_ori[g_ImageLine];
+      
+      for(i = 0; i < MAX_VIDEO_POINT; i++)   //覆盖式图像采集
+      {
+        Temp = (VIDEO_PORT)>>8;
+        p[i] = (uint8)Temp;
+        for (int m = 0; m < 3; m ++);
+        asm("nop");asm("nop");asm("nop");
+        //这里也可以写作“g_VideoImageData[g_VideoImageLine][i]=(VIDEO_PORT);”大家自己看看这两种写法的区别
+      }
+      
             g_ImageLine ++;
         }
         if(g_ImageLine >= MAX_VIDEO_LINE)
@@ -224,6 +246,7 @@ void Search(void)
         {
             //首先 求出本行所有白块的位置
             g_SEnum = 0;  //本行的白块计数器清零
+            g_BEnum = 0;  //本行的黑块计数器清零
             if (video_ori[line][MAX_VIDEO_POINT-1] > IMAGE_MIDDLE)  //大于阈值为白 小于阈值为黑
                 g_Start[g_SEnum] = 0;
             for (i = MAX_VIDEO_POINT-1; i > 0; i --)
@@ -232,21 +255,28 @@ void Search(void)
                 {
                     g_End[g_SEnum] = MAX_VIDEO_POINT-i;
                     g_SEnum ++;
+                    
                 }
                 else if (video_ori[line][i] <= IMAGE_MIDDLE && video_ori[line][i-1] > IMAGE_MIDDLE)
                 {
                     g_Start[g_SEnum] = MAX_VIDEO_POINT-i-1;
+                    g_BEnum ++;
                 }
-                else if (g_SEnum >= 10)
+                
+                else if (g_SEnum >= 10 || g_BEnum >=10)
                 {
                     break;
                 }
             }
+            
+            
             if (video_ori[line][0] > IMAGE_MIDDLE && g_SEnum < 10)
             {
                 g_End[g_SEnum] = MAX_VIDEO_POINT-1;
                 g_SEnum ++;
             }
+            
+            
             //把最下面的那一行单独拿出来处理 做为后续处理的基础
             if (g_SearchFlag)                     //最下一行处理标志
             {
@@ -324,17 +354,27 @@ void Search(void)
                     g_RightEdge[g_RightEdgeNum++].y = g_End[temp_mark];
                 }
             }
+            
+            
+            //=======================起点判断========================//
+//            if(g_SEnum >= 5 && g_BEnum >= 5)
+//            {
+//                times++;
+//                if(times >= 20)
+//                {
+//                    g_PwmServo = 9245;
+//                    Delay_T3_mS(1000);
+//                    g_speed_final = 0; 
+//                }
+//                       //到达终点，电机速度变为0
+//            }
         }
         //=======================起点判断========================//
+
         
         //=======================十字处理========================//
-//        for(int i = 0 ; i<MAX_VIDEO_LINE - 1 ; i++){
-//            Width = g_RightEdge[0].y - g_LeftEdge[0].x;
-//            width = g_RightEdge[i].y - g_LeftEdge[i].x;
-//            if(width > Width){
-//               
-//            }
-//        }
+        
+        
         //=======================中心求取========================//
         /*
         *
@@ -343,26 +383,338 @@ void Search(void)
         边的数相等，而中心位置直接由左右边相加除2所得
         *
         */
-        g_CenterNum = g_RightEdgeNum;
-        for (i = 0; i < g_RightEdgeNum; i ++)
-        {
-            g_CenterPosition[i].x = g_RightEdge[i].x;
-            g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;         
-        }
-        
-        
+                
 
+//        //原来的代码如下：
+//        g_CenterNum = g_RightEdgeNum;
+//        
+//        for (i = 0; i < g_RightEdgeNum; i ++)
+//        {
+//            g_CenterPosition[i].x = g_RightEdge[i].x;
+//            g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;         
+//        }
+
+       
+        //float X0, Y0, k0;
+        
+        //矫正弯道曲线
+//        g_CenterNum = g_RightEdgeNum;
+//        
+//        Right_n = 0;
+//        Left_n = 0;
+//        Cross = 0;
+//        
+//       //int Move_Edg = (g_RightEdge[0].y - g_LeftEdge[0].y)/2;
+//        
+//        Move_Edg_L = ABS(g_LeftEdge[g_CenterNum-1].y - g_LeftEdge[0].y);
+//        Move_Edg_R = ABS(g_RightEdge[g_CenterNum-1].y - g_RightEdge[0].y);
+//        
+//        for(int s=0; s < g_CenterNum; s++)
+//        {
+//            if(g_LeftEdge[s].y <= 10 && g_RightEdge[s].y >= 150)         //左转   即有很多行的g_LeftEdge[] = 0
+//            {
+//                Cross++;
+//            }
+//        }
+//        
+//        for(int s=0; s < g_CenterNum; s++)
+//        {
+//            if(g_LeftEdge[s].y <= 10)         //左转   即有很多行的g_LeftEdge[] = 0
+//            {
+//                Left_n++;
+//            }
+//            else if(g_RightEdge[s].y >= 150)    //右转   即有很多行的g_RightEdge[] >=160
+//            {
+//                Right_n++;
+//            }
+//        }
+//        
+//        if((Left_n >= MIN(20,g_CenterNum) && Right_n <= 10 )|| ( Move_Edg_R >100 && Move_Edg_L < 50))          //左转
+//        {                                               
+//             for (i = 0; i < g_LeftEdgeNum; i++)
+//             {
+//                  int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
+//                  
+//                  g_CenterPosition[i].x = g_RightEdge[i].x;   
+//                  g_CenterPosition[i].y = (g_RightEdge[i].y - Move_Edg);
+//             }
+//        }
+//        else if((Left_n<=10 && Right_n >= MIN(20,g_CenterNum)) || (Move_Edg_L > 100 && Move_Edg_R < 50))    //右转
+//        {
+//           for (i = 0; i < g_RightEdgeNum; i ++)
+//           {
+//                int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
+//                
+//                g_CenterPosition[i].x = g_RightEdge[i].x;   
+//                g_CenterPosition[i].y = (g_LeftEdge[i].y + Move_Edg);
+//           }     
+//        }
+//        else   //直行
+//        {
+//          
+//           for (i = 0; i < g_RightEdgeNum; i ++)
+//           {
+//            g_CenterPosition[i].x = g_RightEdge[i].x;
+//            g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;           
+//           }
+//           
+//        }
+//        if(Cross > 10 && Left_n > 20 && Right_n > 20)       
+//        {
+//          
+//          for (i = 0; i < g_RightEdgeNum; i ++)
+//           {
+//            g_CenterPosition[i].x = g_RightEdge[i].x;
+//            g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;           
+//           }
+//
+//        }
+        
+//       //直行加速至50
+//              for(int i=0; i<20; i++)
+//              {
+//                  g_speed_final = g_speed_final + 5;
+//                  if(g_speed_final >= 40)
+//                  {
+//                      break;
+//                  }
+//              }
+//              g_speed_final = 40;
+        
+        //新的弯道矫正算法
+        
+       g_CenterNum = g_RightEdgeNum;
+       
+       int Right_n = 0;                    //右边缘坐标 >= 150 的个数
+       int Left_n = 0;                     //左边缘坐标 <= 10 的个数
+       
+       //int Right_black_n = 0;              //当右下角落出现黑块时的行数
+       //int Left_black_n = 0;               //当左下角落出现黑块时的行数
+       
+       int L_black_x = 0, R_black_x = 0;           //左右角落最后出现黑块的纵坐标 (涉及到阈值)           
+       
+       int Cross_n = 0;                    //视野中出现贯通白块的行数
+       
+       Move_Edg_L = ABS(g_LeftEdge[g_CenterNum-1].y - g_LeftEdge[0].y);
+       Move_Edg_R = ABS(g_RightEdge[g_CenterNum-1].y - g_RightEdge[0].y);
+       
+       for(int s=0; s<g_CenterNum; s++)
+       {
+            if(g_LeftEdge[s].y <= 10 && g_RightEdge[s].y >= 150)
+            {
+                Cross_n++;
+            }
+       }
+       
+       for(int s=0; s<g_CenterNum; s++)
+       {
+            if(g_LeftEdge[s].y <= 10)         //左转   即有很多行的g_LeftEdge[] <= 10
+            {
+                Left_n++;
+                if(Left_n == 1)
+                {
+                    L_black_x = s;
+                }
+            }
+            else if(g_RightEdge[s].y >= 150)    //右转   即有很多行的g_RightEdge[] >= 150
+            {
+                Right_n++;
+                if(Right_n == 1)
+                {
+                    R_black_x = s;
+                }
+            }
+        }
+       
+        if( Left_n >= MIN(20, g_CenterNum) && Right_n <= 10 || (Move_Edg_R >= 100 && Move_Edg_L <= 50 ) )                  //左转细致考虑
+        {
+            Str_YouWan = 0;
+            Str_ZhiDao = 0;
+ 
+//            for(i=0; i<Str_ZuoWan; i++)
+//            {
+//                if(g_speed_final >= 35)
+//                {
+//                   g_speed_final = 35; 
+//                   break;
+//                }
+//                
+//                g_speed_final = g_speed_final - 3;
+//            }
+//            
+//            if(g_speed_final <= 35)
+//              g_speed_final = 35;
+//
+//            if(Str_ZuoWan < 255)
+//                Str_ZuoWan ++;
+            
+            if( L_black_x <= 3 )
+            {
+                for(i=0; i<g_CenterNum; i++)
+                {
+                    int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y) / 2;
+                
+                    g_CenterPosition[i].x = g_RightEdge[i].x;  
+                    g_CenterPosition[i].y = (g_RightEdge[i].y - Move_Edg);
+                }
+            }
+            else
+            {
+                for(i=0; i<L_black_x; i++)
+                {
+                    int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
+                
+                    g_CenterPosition[i].x = g_RightEdge[i].x;   
+                    g_CenterPosition[i].y = (g_LeftEdge[i].y + Move_Edg);
+                }
+                for(i=L_black_x; i<g_CenterNum; i++)
+                {
+                    int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2; 
+                     
+                    g_CenterPosition[i].x = g_RightEdge[i].x;
+                    g_CenterPosition[i].y = (g_RightEdge[i].y - i);
+                    
+                }
+            }
+        }
+        else if( Left_n<=10 && Right_n >= MIN(20,g_CenterNum) || (Move_Edg_L >= 100 && Move_Edg_R <= 50) )               //右转细致考虑
+        {
+            
+            Str_ZuoWan = 0;
+            Str_ZhiDao = 0;
+            
+//            for(i=0; i<Str_YouWan; i++)
+//            {
+//
+//                if(g_speed_final >= 35)
+//                {
+//                    g_speed_final = 35; 
+//                    break;
+//                }
+//                
+//                g_speed_final = g_speed_final - 3;
+//            }
+//            
+//            if(g_speed_final <= 35)
+//              g_speed_final = 35;
+//
+//            if(Str_YouWan < 255)
+//                Str_YouWan ++;  
+            
+            if( R_black_x <= 3)
+            {
+                for (i=0; i<g_CenterNum; i++)
+                {
+                    int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y) / 2;
+                    
+                    g_CenterPosition[i].x = g_RightEdge[i].x;
+                    g_CenterPosition[i].y = g_LeftEdge[i].y + Move_Edg;
+                } 
+            }
+            else
+            {
+                for (i=0; i<R_black_x; i++)
+                {
+                    int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
+                    
+                    g_CenterPosition[i].x = g_RightEdge[i].x;   
+                    g_CenterPosition[i].y = g_RightEdge[i].y - Move_Edg;
+                }
+                for(i=R_black_x; i<g_CenterNum; i++)
+                { 
+                    int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
+                    
+                    g_CenterPosition[i].x = g_RightEdge[i].x;
+                    g_CenterPosition[i].y = g_LeftEdge[i].y + Move_Edg;
+                    
+                }
+            }
+        }
+        else   //直行
+        {
+          //       直行加速至50
+            Str_ZuoWan = 0;
+            Str_YouWan = 0;
+          
+            for(i=0; i<Str_ZhiDao; i++)
+            {
+                if(g_speed_final >= 45)
+                {
+                  g_speed_final = 45;  
+                  break;
+                }
+                
+                g_speed_final = g_speed_final + 2;
+            }
+            
+            if(g_speed_final <= 45)
+              g_speed_final = 45;
+            
+            if(Str_ZhiDao < 255)
+                Str_ZhiDao ++;
+              
+           for (i = 0; i < g_RightEdgeNum; i ++)
+           {
+              g_CenterPosition[i].x = g_RightEdge[i].x;
+              g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;           
+           }       
+       }
+                  
+       if(Cross_n >= 10 && Left_n > 20 && Right_n > 20)
+       {
+          for (i = 0; i < g_RightEdgeNum; i ++)
+            
+           {
+              g_CenterPosition[i].x = g_RightEdge[i].x;
+              g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;           
+           }
+       }
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
     
         //===================转角以及电机控制====================//
         //加权平均法求方向控制
         g_DirectionControlWhole = 0;
         g_DirectionControlLine = 0;
-        for (i = 0; i < MIN(55,g_CenterNum); i ++)
+        
+//        int tmpx, g_LowLine, g_HighLine;
+//        g_LowLine = MIN(g_CenterNum, 10);
+//        g_HighLine = MIN(g_CenterNum, 30);
+        
+        for (i = 0; i < MIN(g_CenterNum,50) ; i ++)
         {
             if (g_CenterPosition[i].y >= 0 && g_CenterPosition[i].y <= MAX_VIDEO_POINT)
             {
+              
+                //自己改进的算法
+//                if(g_CenterPosition[i].x < g_LowLine)
+//                  tmpx = ( (int) g_CenterPosition[i].x)*1;
+//                else if(g_CenterPosition[i].x > g_HighLine)
+//                  tmpx = ( (int) g_CenterPosition[i].x)*5;
+//                else
+//                  tmpx = ( (int) g_CenterPosition[i].x)*3;
+//                
+//                g_DirectionControlLine += tmpx;
+//                g_DirectionControlWhole += (int) g_CenterPosition[i].y * tmpx;
+              
+               // 原来代码
                 g_DirectionControlLine += (int)g_CenterPosition[i].x;
-                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //注意数据不要溢出    
+                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //注意数据不要溢出    c
             }
         }
         
@@ -384,8 +736,6 @@ void Search(void)
         {
             g_DirectionControl = g_FormerDirectionControl;
         }
-        
-        g_FormerDirectionControl = g_DirectionControl;
         //======================舵机控制===========================//
         
         Car_Turn();
@@ -461,7 +811,7 @@ void Search(void)
         //======================状态转换=========================//
     
         g_VideoFlag = VIDEO_FINISH;
-        g_Display ++;                   //记录场数
+        g_Display++;                   //记录场数
         //标定时序
         if (g_Display % 5 == 0)
         {
@@ -502,11 +852,14 @@ date:           2017-9-10
 description:    control car run forward
 */
 void Car_Run(void)
-{   
-  
+{
+  if(g_time > 15000){
+    
+    g_speed_final = 0;
+  }
     motorPID.vi_Ref = -g_speed_final;
     g_PwmMotor = v_PIDCalc(&motorPID);
-     
+    
     if(g_PwmMotor > 1000)
     {
         g_PwmMotor = 1000;
@@ -516,7 +869,7 @@ void Car_Run(void)
         g_PwmMotor = -1000;
     }
 
-    //g_PwmMotor= -300;           //开环测试电机用
+   // g_PwmMotor= -400;           //开环测试电机用
     SET_PWM_MOTR(g_PwmMotor);
 
 }
@@ -533,10 +886,10 @@ void Car_Turn(void)
 {
     //中值转换为偏离量，方便计算舵机转向
     g_DirectionError = (MID_VIDEO_POINT - g_DirectionControl);
-    //测舵机中值时从这里到非门注释，测完后解注
+    
     g_PwmServo = (int)(PWM_SVO_MIDDLE + (g_DirectionError * turn_p) + (g_DirectionError - last_g_DirectionError) * turn_d);
     last_g_DirectionError = g_DirectionError;
-    
+      
    if (g_PwmServo <= PWM_SVO_MIN)
    {
        g_PwmServo = PWM_SVO_MIN;

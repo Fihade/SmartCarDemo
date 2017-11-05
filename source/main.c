@@ -16,8 +16,9 @@ void main(void)
 
     DisableInterrupts();//关中断
 
-    system_init();
 
+    system_init();
+    Delay_T3_mS(1000);
     ScheduleInit();
 
     EnableInterrupts();//开中断

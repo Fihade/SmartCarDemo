@@ -19,6 +19,6 @@
 @REM 
 
 
-"E:\common\bin\cspybat" "E:\arm\bin\armproc.dll" "E:\arm\bin\armpemicro.dll"  %1 --plugin "E:\arm\bin\armbat.dll" --device_macro "E:\arm\config\debugger\Freescale\Kxx.dmac" --flash_loader "E:\arm\config\flashloader\Freescale\FlashK60Dxxx128K.board" --backend -B "--endian=little" "--cpu=Cortex-M4" "--fpu=None" "-p" "E:\arm\CONFIG\debugger\Freescale\MK60DN512Zxxx10.ddf" "--semihosting" "--device=MK60DN512Zxxx10" "--pemicro_interface_type=OSJtag" "--pemicro_reset_delay=" "--drv_communication=USB1" "--pemicro_jtag" 
+"D:\Program Files (x86)\IAR\common\bin\cspybat" "D:\Program Files (x86)\IAR\arm\bin\armproc.dll" "D:\Program Files (x86)\IAR\arm\bin\armpemicro.dll"  %1 --plugin "D:\Program Files (x86)\IAR\arm\bin\armbat.dll" --device_macro "D:\Program Files (x86)\IAR\arm\config\debugger\Freescale\Kxx.dmac" --flash_loader "D:\Program Files (x86)\IAR\arm\config\flashloader\Freescale\FlashK60Dxxx128K.board" --backend -B "--endian=little" "--cpu=Cortex-M4" "--fpu=None" "-p" "D:\Program Files (x86)\IAR\arm\CONFIG\debugger\Freescale\MK60DN512Zxxx10.ddf" "--semihosting" "--device=MK60DN512Zxxx10" "--pemicro_interface_type=OSJtag" "--pemicro_reset_delay=" "--drv_communication=USB1" "--pemicro_jtag" 
 
 
