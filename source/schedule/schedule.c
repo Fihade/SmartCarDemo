@@ -125,7 +125,7 @@ void Running_Init(void)
     LED_D_ON();   
     turn_p = 7.6;                  //舵机pid p      11     8     10      9        9     8.5     8.6
     turn_d = 0.6;                    //舵机pid d       1     1    1.2     1.2         1        1       1  
-    g_speed_final = 35;          //电机速度赋值
+    g_speed_final = 40;          //电机速度赋值
   }
   else
   {
@@ -644,7 +644,7 @@ void Search(void)
                   break;
                 }
                 
-                g_speed_final = g_speed_final + 2;
+                g_speed_final = g_speed_final + 3;
             }
             
             if(g_speed_final <= 45)
@@ -671,30 +671,15 @@ void Search(void)
        }
        
        
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
     
         //===================转角以及电机控制====================//
         //加权平均法求方向控制
         g_DirectionControlWhole = 0;
         g_DirectionControlLine = 0;
         
-//        int tmpx, g_LowLine, g_HighLine;
-//        g_LowLine = MIN(g_CenterNum, 10);
-//        g_HighLine = MIN(g_CenterNum, 30);
+        int tmpx, g_LowLine, g_HighLine;
+        g_LowLine = MIN(g_CenterNum, 10);
+        g_HighLine = MIN(g_CenterNum, 30);
         
         for (i = 0; i < MIN(g_CenterNum,50) ; i ++)
         {
@@ -702,19 +687,19 @@ void Search(void)
             {
               
                 //自己改进的算法
-//                if(g_CenterPosition[i].x < g_LowLine)
-//                  tmpx = ( (int) g_CenterPosition[i].x)*1;
-//                else if(g_CenterPosition[i].x > g_HighLine)
-//                  tmpx = ( (int) g_CenterPosition[i].x)*5;
-//                else
-//                  tmpx = ( (int) g_CenterPosition[i].x)*3;
-//                
-//                g_DirectionControlLine += tmpx;
-//                g_DirectionControlWhole += (int) g_CenterPosition[i].y * tmpx;
+                if(g_CenterPosition[i].x < g_LowLine)
+                  tmpx = ( (int) g_CenterPosition[i].x)*1;
+                else if(g_CenterPosition[i].x > g_HighLine)
+                  tmpx = ( (int) g_CenterPosition[i].x)*5;
+                else
+                  tmpx = ( (int) g_CenterPosition[i].x)*3;
+                
+                g_DirectionControlLine += tmpx;
+                g_DirectionControlWhole += (int) g_CenterPosition[i].y * tmpx;
               
                // 原来代码
-                g_DirectionControlLine += (int)g_CenterPosition[i].x;
-                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //注意数据不要溢出    c
+//                g_DirectionControlLine += (int)g_CenterPosition[i].x;
+//                g_DirectionControlWhole += (int)g_CenterPosition[i].y * g_CenterPosition[i].x;  //注意数据不要溢出    c
             }
         }
         
