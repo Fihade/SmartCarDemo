@@ -129,7 +129,7 @@ void Running_Init(void)
   }
   else
   {
-    turn_p = 7.8;                  //舵机pid p      11     8     10      9        9     8.5     8.6
+    turn_p = 8;                  //舵机pid p      11     8     10      9        9     8.5     8.6
     turn_d = 0.6;                    //舵机pid d       1     1    1.2     1.2         1        1       1  
     g_speed_final = 35;          //电机速度赋值
   }
