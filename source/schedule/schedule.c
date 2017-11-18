@@ -89,7 +89,7 @@ description:    init
 void Running_Init(void)
 {   
     //拨码开关
-   //保证在连续十字弯处提前进入
+
   g_speed_p = 150;                //电机pid 
   g_speed_i = 70;
   g_speed_d = 1;
@@ -100,23 +100,23 @@ void Running_Init(void)
     LED_A_ON();    
     turn_p = 7;                  //舵机pid p      11     8     10      9        9     8.5     8.6
     turn_d = 0.7;                    //舵机pid d       1     1    1.2     1.2         1        1       1    
-    g_speed_final = 35;          //电机速度赋值
+    g_speed_final = 40;          //电机速度赋值
   }
   
   else if(JM_1_STATUS())
   {
     LED_B_ON(); 
-    turn_p = 7.2;                  //舵机pid p      11     8     10      9        9     8.5     8.6
-    turn_d = 0.7;                    //舵机pid d       1     1    1.2     1.2         1        1       1    
-    g_speed_final = 35;          //电机速度赋值
+    turn_p = 7.4;                  //舵机pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.5;                    //舵机pid d       1     1    1.2     1.2         1        1       1    
+    g_speed_final = 40;          //电机速度赋值
   }
   
   else if(JM_2_STATUS())
   {
     LED_C_ON();   
     turn_p = 7.4;                  //舵机pid p      11     8     10      9        9     8.5     8.6
-    turn_d = 0.6;                    //舵机pid d       1     1    1.2     1.2         1        1       1   
-    g_speed_final = 35;          //电机速度赋值
+    turn_d = 0.7;                    //舵机pid d       1     1    1.2     1.2         1        1       1   
+    g_speed_final = 40;          //电机速度赋值
   }
   
   else  if(JM_3_STATUS())
@@ -124,14 +124,14 @@ void Running_Init(void)
     //
     LED_D_ON();   
     turn_p = 7.6;                  //舵机pid p      11     8     10      9        9     8.5     8.6
-    turn_d = 0.6;                    //舵机pid d       1     1    1.2     1.2         1        1       1  
+    turn_d = 0.7;                    //舵机pid d       1     1    1.2     1.2         1        1       1  
     g_speed_final = 40;          //电机速度赋值
   }
   else
   {
-    turn_p = 8;                  //舵机pid p      11     8     10      9        9     8.5     8.6
-    turn_d = 0.6;                    //舵机pid d       1     1    1.2     1.2         1        1       1  
-    g_speed_final = 35;          //电机速度赋值
+    turn_p = 7.8;                  //舵机pid p      11     8     10      9        9     8.5     8.6
+    turn_d = 0.7;                    //舵机pid d       1     1    1.2     1.2         1        1       1  
+    g_speed_final = 40;          //电机速度赋值
   }
   
 }
@@ -395,91 +395,6 @@ void Search(void)
 //        }
 
        
-        //float X0, Y0, k0;
-        
-        //矫正弯道曲线
-//        g_CenterNum = g_RightEdgeNum;
-//        
-//        Right_n = 0;
-//        Left_n = 0;
-//        Cross = 0;
-//        
-//       //int Move_Edg = (g_RightEdge[0].y - g_LeftEdge[0].y)/2;
-//        
-//        Move_Edg_L = ABS(g_LeftEdge[g_CenterNum-1].y - g_LeftEdge[0].y);
-//        Move_Edg_R = ABS(g_RightEdge[g_CenterNum-1].y - g_RightEdge[0].y);
-//        
-//        for(int s=0; s < g_CenterNum; s++)
-//        {
-//            if(g_LeftEdge[s].y <= 10 && g_RightEdge[s].y >= 150)         //左转   即有很多行的g_LeftEdge[] = 0
-//            {
-//                Cross++;
-//            }
-//        }
-//        
-//        for(int s=0; s < g_CenterNum; s++)
-//        {
-//            if(g_LeftEdge[s].y <= 10)         //左转   即有很多行的g_LeftEdge[] = 0
-//            {
-//                Left_n++;
-//            }
-//            else if(g_RightEdge[s].y >= 150)    //右转   即有很多行的g_RightEdge[] >=160
-//            {
-//                Right_n++;
-//            }
-//        }
-//        
-//        if((Left_n >= MIN(20,g_CenterNum) && Right_n <= 10 )|| ( Move_Edg_R >100 && Move_Edg_L < 50))          //左转
-//        {                                               
-//             for (i = 0; i < g_LeftEdgeNum; i++)
-//             {
-//                  int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
-//                  
-//                  g_CenterPosition[i].x = g_RightEdge[i].x;   
-//                  g_CenterPosition[i].y = (g_RightEdge[i].y - Move_Edg);
-//             }
-//        }
-//        else if((Left_n<=10 && Right_n >= MIN(20,g_CenterNum)) || (Move_Edg_L > 100 && Move_Edg_R < 50))    //右转
-//        {
-//           for (i = 0; i < g_RightEdgeNum; i ++)
-//           {
-//                int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
-//                
-//                g_CenterPosition[i].x = g_RightEdge[i].x;   
-//                g_CenterPosition[i].y = (g_LeftEdge[i].y + Move_Edg);
-//           }     
-//        }
-//        else   //直行
-//        {
-//          
-//           for (i = 0; i < g_RightEdgeNum; i ++)
-//           {
-//            g_CenterPosition[i].x = g_RightEdge[i].x;
-//            g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;           
-//           }
-//           
-//        }
-//        if(Cross > 10 && Left_n > 20 && Right_n > 20)       
-//        {
-//          
-//          for (i = 0; i < g_RightEdgeNum; i ++)
-//           {
-//            g_CenterPosition[i].x = g_RightEdge[i].x;
-//            g_CenterPosition[i].y = (g_RightEdge[i].y + g_LeftEdge[i].y) / 2;           
-//           }
-//
-//        }
-        
-//       //直行加速至50
-//              for(int i=0; i<20; i++)
-//              {
-//                  g_speed_final = g_speed_final + 5;
-//                  if(g_speed_final >= 40)
-//                  {
-//                      break;
-//                  }
-//              }
-//              g_speed_final = 40;
         
         //新的弯道矫正算法
         
@@ -528,9 +443,9 @@ void Search(void)
        
         if( Left_n >= MIN(20, g_CenterNum) && Right_n <= 10 || (Move_Edg_R >= 100 && Move_Edg_L <= 50 ) )                  //左转细致考虑
         {
-            Str_YouWan = 0;
-            Str_ZhiDao = 0;
- 
+//            Str_YouWan = 0;
+//            Str_ZhiDao = 0;
+// 
 //            for(i=0; i<Str_ZuoWan; i++)
 //            {
 //                if(g_speed_final >= 35)
@@ -560,28 +475,20 @@ void Search(void)
             }
             else
             {
-                for(i=0; i<L_black_x; i++)
+                for(i=0; i<g_CenterNum; i++)
                 {
                     int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
                 
                     g_CenterPosition[i].x = g_RightEdge[i].x;   
                     g_CenterPosition[i].y = (g_LeftEdge[i].y + Move_Edg);
                 }
-                for(i=L_black_x; i<g_CenterNum; i++)
-                {
-                    int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2; 
-                     
-                    g_CenterPosition[i].x = g_RightEdge[i].x;
-                    g_CenterPosition[i].y = (g_RightEdge[i].y - i);
-                    
-                }
             }
         }
         else if( Left_n<=10 && Right_n >= MIN(20,g_CenterNum) || (Move_Edg_L >= 100 && Move_Edg_R <= 50) )               //右转细致考虑
         {
-            
-            Str_ZuoWan = 0;
-            Str_ZhiDao = 0;
+//            
+//            Str_ZuoWan = 0;
+//            Str_ZhiDao = 0;
             
 //            for(i=0; i<Str_YouWan; i++)
 //            {
@@ -613,45 +520,38 @@ void Search(void)
             }
             else
             {
-                for (i=0; i<R_black_x; i++)
+                for (i=0; i<g_CenterNum; i++)
                 {
                     int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
                     
                     g_CenterPosition[i].x = g_RightEdge[i].x;   
                     g_CenterPosition[i].y = g_RightEdge[i].y - Move_Edg;
                 }
-                for(i=R_black_x; i<g_CenterNum; i++)
-                { 
-                    int Move_Edg = (g_RightEdge[i].y - g_LeftEdge[i].y)/2;
-                    
-                    g_CenterPosition[i].x = g_RightEdge[i].x;
-                    g_CenterPosition[i].y = g_LeftEdge[i].y + Move_Edg;
-                    
-                }
+               
             }
         }
         else   //直行
         {
           //       直行加速至50
-            Str_ZuoWan = 0;
-            Str_YouWan = 0;
-          
-            for(i=0; i<Str_ZhiDao; i++)
-            {
-                if(g_speed_final >= 45)
-                {
-                  g_speed_final = 45;  
-                  break;
-                }
-                
-                g_speed_final = g_speed_final + 3;
-            }
-            
-            if(g_speed_final <= 45)
-              g_speed_final = 45;
-            
-            if(Str_ZhiDao < 255)
-                Str_ZhiDao ++;
+//            Str_ZuoWan = 0;
+//            Str_YouWan = 0;
+//          
+//            for(i=0; i<Str_ZhiDao; i++)
+//            {
+//                if(g_speed_final >= 45)
+//                {
+//                  g_speed_final = 45;  
+//                  break;
+//                }
+//                
+//                g_speed_final = g_speed_final + 2;
+//            }
+//            
+//            if(g_speed_final <= 45)
+//              g_speed_final = 45;
+//            
+//            if(Str_ZhiDao < 255)
+//                Str_ZhiDao ++;
               
            for (i = 0; i < g_RightEdgeNum; i ++)
            {
@@ -670,8 +570,7 @@ void Search(void)
            }
        }
        
-       
-    
+          
         //===================转角以及电机控制====================//
         //加权平均法求方向控制
         g_DirectionControlWhole = 0;
@@ -838,10 +737,12 @@ description:    control car run forward
 */
 void Car_Run(void)
 {
-  if(g_time > 15000){
-    
+  if(g_time >800)
+  {
+   
     g_speed_final = 0;
-  }
+    
+   }
     motorPID.vi_Ref = -g_speed_final;
     g_PwmMotor = v_PIDCalc(&motorPID);
     

@@ -6,7 +6,6 @@
  */
 #include "common.h"
 
-/******************************************************************************/
 int servo_test=PWM_SVO_MIDDLE;
 int motor_test=0;
 
