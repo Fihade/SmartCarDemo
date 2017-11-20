@@ -737,12 +737,12 @@ description:    control car run forward
 */
 void Car_Run(void)
 {
-  if(g_time >800)
-  {
+//   if(g_time >800)
+//   {
    
-    g_speed_final = 0;
+//     g_speed_final = 0;
     
-   }
+//    }
     motorPID.vi_Ref = -g_speed_final;
     g_PwmMotor = v_PIDCalc(&motorPID);
     
